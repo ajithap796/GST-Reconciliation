@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.0 Standalone)</title>
+  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.1 Standalone)</title>
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- sheetjs (XLSX with styling support) library -->
@@ -251,10 +251,10 @@
         </div>
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
-            AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Converter v1.0</span>
+            AJ FinTech Solutions
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.1</span>
           </h1>
-          <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">DUAL-ENGINE PARSER &amp; INTEGRITY LEDGER</p>
+          <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
       </div>
       
@@ -286,7 +286,7 @@
         </div>
 
         <div id="runtime-controls" class="hidden flex items-center gap-2">
-          <button onclick="exportReconciliationReport()" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-md cursor-pointer">
+          <button onclick="triggerStandaloneSaveAs('GST_Reconciliation_Report.xlsx')" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-md cursor-pointer">
             📥 Download Linked Excel Workbook
           </button>
           <button onclick="restartWorkspace()" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition border border-slate-700 cursor-pointer">
@@ -539,7 +539,7 @@
       GST Reconciliation Tool — Client Sandbox Engine — Zero Server Latency · 100% Secure Private Offline Client
     </p>
     <p class="text-[10px] text-slate-550 font-black uppercase tracking-wider text-right text-blue-600">
-      Branding Designed by AJ — AJ v1.0
+      Branding Designed by AJ — AJ v1.1
     </p>
   </footer>
 
@@ -1073,10 +1073,10 @@
       };
 
       const calc = {
-        tv: bt.tv + nib.tv + adj.tv - ni2b.tv,
-        ig: bt.ig + nib.ig + adj.ig - ni2b.ig,
-        cg: bt.cg + nib.cg + adj.cg - ni2b.cg,
-        sg: bt.sg + nib.sg + adj.sg - ni2b.sg
+        tv: bt.tv + nib.tv - ni2b.tv,
+        ig: bt.ig + nib.ig - ni2b.ig,
+        cg: bt.cg + nib.cg - ni2b.cg,
+        sg: bt.sg + nib.sg - ni2b.sg
       };
 
       const diff = {
@@ -1520,7 +1520,7 @@
       `;
     }
 
-    function exportReconciliationReport() {
+    function exportReconciliationReport(customName, usePicker = false) {
       if (!state.results) return;
 
       const wb = XLSX.utils.book_new();
@@ -1576,10 +1576,15 @@
 
               if (R < headerRowsCount) {
                 cell.s = {
-                  fill: { fgColor: { rgb: isSummary && R === 0 ? "0F172A" : "1E293B" } },
-                  font: { bold: true, color: { rgb: "FFFFFF" }, name: "Segoe UI", sz: 12 },
+                  fill: { fgColor: { rgb: isSummary && R === 0 ? "CBD5E1" : "E2E8F0" } },
+                  font: { bold: true, color: { rgb: "0F172A" }, name: "Calisto MT", sz: 10 },
                   alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                  border: { bottom: { style: "medium", color: { rgb: "475569" } } }
+                  border: {
+                    top: { style: "thin", color: { rgb: "94A3B8" } },
+                    bottom: { style: "medium", color: { rgb: "94A3B8" } },
+                    left: { style: "thin", color: { rgb: "94A3B8" } },
+                    right: { style: "thin", color: { rgb: "94A3B8" } }
+                  }
                 };
               } else {
                 const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
@@ -1588,19 +1593,26 @@
 
                 if (isTotalRow) {
                   cell.s = {
-                    font: { bold: true, name: "Segoe UI", sz: 12 },
+                    font: { bold: true, name: "Calisto MT", sz: 10 },
                     fill: { fgColor: { rgb: "F1F5F9" } },
                     border: {
                       top: { style: "thin", color: { rgb: "94A3B8" } },
-                      bottom: { style: "double", color: { rgb: "475569" } }
+                      bottom: { style: "double", color: { rgb: "475569" } },
+                      left: { style: "thin", color: { rgb: "E2E8F0" } },
+                      right: { style: "thin", color: { rgb: "E2E8F0" } }
                     },
-                    alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" }
+                    alignment: { vertical: "center", horizontal: "right" }
                   };
                 } else {
                   cell.s = {
-                    font: { name: "Segoe UI", sz: 11 },
+                    font: { name: "Calisto MT", sz: 9 },
                     alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" },
-                    border: { bottom: { style: "thin", color: { rgb: "F1F5F9" } } }
+                    border: {
+                      top: { style: "thin", color: { rgb: "E2E8F0" } },
+                      bottom: { style: "thin", color: { rgb: "E2E8F0" } },
+                      left: { style: "thin", color: { rgb: "E2E8F0" } },
+                      right: { style: "thin", color: { rgb: "E2E8F0" } }
+                    }
                   };
                 }
               }
@@ -1688,7 +1700,10 @@
 
       // 5. Reconciliation Summary with formulas
       const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
-      const summaryRows = state.summary.map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
+      // Filter out Amount Difference in Accounts from summary rows in Excel
+      const summaryRows = state.summary
+        .filter(s => !s.label.includes("Amount Difference"))
+        .map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
       const wsSummary = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
 
       const idx_m_tot = N_m + 3;
@@ -1699,23 +1714,22 @@
       // Link values to Sheet totals dynamically using exact formulas
       wsSummary['B2'] = { t: 'n', f: `='Matched'!D${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
       wsSummary['B3'] = { t: 'n', f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!F${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
-      wsSummary['B5'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['B4'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
 
-      // Reconciled Calculation Column B..E
-      wsSummary['B6'] = { t: 'n', f: `=B2+B3+B4-B5` };
-      wsSummary['C6'] = { t: 'n', f: `=C2+C3+C4-C5` };
-      wsSummary['D6'] = { t: 'n', f: `=D2+D3+D4-D5` };
-      wsSummary['E6'] = { t: 'n', f: `=E2+E3+E4-E5` };
+      // Reconciled Calculation Column B..E (Row 5 - index 4)
+      wsSummary['B5'] = { t: 'n', f: `=B2+B3-B4` };
+      wsSummary['C5'] = { t: 'n', f: `=C2+C3-C4` };
+      wsSummary['D5'] = { t: 'n', f: `=D2+D3-D4` };
+      wsSummary['E5'] = { t: 'n', f: `=E2+E3-E4` };
 
       // Actual 2B total
-      wsSummary['B7'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['B6'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
 
       // Difference Row
-      wsSummary['B8'] = { t: 'n', f: `=B6-B7` };
-      wsSummary['C8'] = { t: 'n', f: `=C6-C7` };
-      wsSummary['D8'] = { t: 'n', f: `=D6-D7` };
-      wsSummary['E8'] = { t: 'n', f: `=E6-E7` };
+      wsSummary['B7'] = { t: 'n', f: `=B5-B6` };
+      wsSummary['C7'] = { t: 'n', f: `=C5-C6` };
+      wsSummary['D7'] = { t: 'n', f: `=D5-D6` };
+      wsSummary['E7'] = { t: 'n', f: `=E5-E6` };
 
       // Anchor Hyperlinks inside summary to quickly jump between tabs
       const attachLink = (cell, sheetName) => {
@@ -1729,14 +1743,40 @@
 
       attachLink('A2', 'Matched');
       attachLink('A3', 'Not in Books(2B Only)');
-      attachLink('A4', 'Amount Variance');
-      attachLink('A5', 'Not in 2B(Books Only)');
-      attachLink('A7', 'Matched');
+      attachLink('A4', 'Not in 2B(Books Only)');
+      attachLink('A6', 'Matched');
 
       applyStylesToSheet(wsSummary, 1, true);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
 
-      XLSX.writeFile(wb, `GST_Reconciled_Report_AJ_v1.0.xlsx`);
+      const finalName = customName || `GST_Reconciled_Report_AJ_v1.1.xlsx`;
+      const fn = finalName.endsWith('.xlsx') ? finalName : `${finalName}.xlsx`;
+
+      if (usePicker && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+        (async () => {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: fn,
+              types: [{
+                description: 'Excel Workbook',
+                accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+              }]
+            });
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+          } catch (err) {
+            console.warn(err);
+            if (err.name !== 'AbortError') {
+              XLSX.writeFile(wb, fn);
+            }
+          }
+        })();
+      } else {
+        XLSX.writeFile(wb, fn);
+      }
     }
 
     function restartWorkspace() {
@@ -1751,6 +1791,80 @@
       resetTrackerUI('books');
       resetTrackerUI('gstr2b');
       document.getElementById('runtime-controls').classList.add('hidden');
+    }
+
+    // Standalone Save As Dialog Engine
+    let currentStandaloneFilename = 'GST_Reconciliation_Report.xlsx';
+
+    function triggerStandaloneSaveAs(defaultFn) {
+      if (!state.results) {
+         alert("Please run reconciliation first!");
+         return;
+      }
+      currentStandaloneFilename = defaultFn || 'GST_Reconciliation_Report.xlsx';
+      
+      const fnInput = document.getElementById('standalone-filename-input');
+      if (fnInput) {
+        fnInput.value = currentStandaloneFilename;
+      }
+      
+      document.getElementById('standalone-saveas-modal').classList.remove('hidden');
+    }
+
+    function closeStandaloneSaveAs() {
+      document.getElementById('standalone-saveas-modal').classList.add('hidden');
+    }
+
+    function handleStandaloneDirectDownload() {
+      // Get current filename input value if exists
+      const fnInput = document.getElementById('standalone-filename-input');
+      const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
+      
+      exportReconciliationReport(filename, false);
+      showStandaloneToast(filename, 'Browser Downloads Folder');
+      closeStandaloneSaveAs();
+    }
+
+    async function handleStandaloneNativeSaveAs() {
+      const fnInput = document.getElementById('standalone-filename-input');
+      const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
+
+      if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+        try {
+          await exportReconciliationReport(filename, true);
+          showStandaloneToast(filename, 'Native File System Access');
+          closeStandaloneSaveAs();
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          console.warn('Native picker failed/blocked, falling back to prompt:', err);
+        }
+      }
+
+      // Fallback
+      const customName = window.prompt(
+        "Save As — Please enter a custom filename for your spreadsheet:\n\n(Tip: Enable 'Ask where to save each file before downloading' in Chrome Settings to pick custom paths on your local system)",
+        filename
+      );
+      if (customName !== null) {
+        const sanitized = customName.trim() || filename;
+        exportReconciliationReport(sanitized, false);
+        showStandaloneToast(sanitized, 'Browser Dialog Path');
+      }
+      closeStandaloneSaveAs();
+    }
+
+    function showStandaloneToast(fn, pathStr) {
+      const toast = document.getElementById('standalone-toast-banner');
+      if (!toast) return;
+      document.getElementById('standalone-toast-body').textContent = 
+        pathStr === 'Native File System Access' 
+          ? `File compiled successfully. Save location chosen via native system popup.` 
+          : `File compiled successfully and downloaded as "${fn}" via browser downloads.`;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 8500);
     }
 
     function applyTheme(isDark) {
@@ -1796,5 +1910,107 @@
       applyTheme(saved === '1');
     });
   </script>
+
+  <!-- SPLIT SAVE AS DIALOG MODAL -->
+  <div id="standalone-saveas-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none">
+    
+    <!-- CHOICE EXPORT CONFIGURATION SCREEN -->
+    <div id="standalone-select-view" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden text-slate-800 dark:text-slate-100 transition-colors duration-300">
+      <!-- Header -->
+      <div class="flex justify-between items-center p-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          📥 Export &amp; Save Workbook
+        </h3>
+        <button onclick="closeStandaloneSaveAs()" class="text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 cursor-pointer p-1">✕</button>
+      </div>
+
+      <!-- Form Body -->
+      <div class="p-6 space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+            Workbook Filename
+          </label>
+          <div class="flex gap-2">
+            <input 
+              id="standalone-filename-input"
+              type="text" 
+              class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
+              value=""
+              placeholder="GST_Reconciliation_Report.xlsx"
+            />
+            <span class="bg-slate-100 dark:bg-slate-800 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center">
+              .xlsx
+            </span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          Choose how you would like to save your formula-linked reconciliation ledger:
+        </p>
+
+        <div class="space-y-4">
+          <!-- Option 1: Direct browser download -->
+          <button onclick="handleStandaloneDirectDownload()" class="w-full text-left bg-slate-50 hover:bg-slate-150 dark:bg-slate-800/40 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex items-start gap-4 transition group cursor-pointer">
+            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400 shrink-0 text-lg">📥</div>
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-bold text-slate-950 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                Standard Web Download
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
+                Direct quick download. Saves standard Excel workbook to your browser default Downloads folder immediately.
+              </p>
+            </div>
+          </button>
+          
+          <!-- Option 2: Native file handle / Save As selector -->
+          <button onclick="handleStandaloneNativeSaveAs()" class="w-full text-left bg-slate-50 hover:bg-slate-150 dark:bg-slate-800/40 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex items-start gap-4 transition group cursor-pointer">
+            <div class="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400 shrink-0 text-lg">🔄</div>
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-bold text-slate-950 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                Native "Save As" Popup Screen
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
+                Pulls your actual computer's system paths. Triggers a real native system Save Dialog so you can browse real local directories like Desktop, OneDrive, or document archives.
+              </p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Setting explanation -->
+        <div class="bg-slate-50 dark:bg-slate-800/30 border border-slate-150 dark:border-slate-800/60 rounded-xl p-4 flex gap-3.5 items-start">
+          <div class="text-[14px]">⚙️</div>
+          <div class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 select-text">
+            <strong class="font-bold text-slate-800 dark:text-slate-200 block mb-0.5">
+              For Ultimate Native Control (Highly Recommended)
+            </strong>
+            To have Chrome pop up the save location box for all downloads:
+            <ol class="list-decimal pl-4 mt-2 space-y-1 font-medium">
+              <li>Open Google Chrome <strong class="font-bold">Settings</strong> (chrome://settings).</li>
+              <li>Go to the <strong className="font-bold">Downloads</strong> menu in the left panel.</li>
+              <li>Tick on <strong class="font-bold">"Ask where to save each file before downloading"</strong>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-3 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+        <button onclick="closeStandaloneSaveAs()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WORKBOOK TOAST BANNER -->
+  <div id="standalone-toast-banner" class="hidden fixed top-5 right-5 z-[200] max-w-md bg-white border-l-4 border-emerald-500 rounded-lg shadow-xl p-4 flex gap-3.5 items-start justify-between border border-slate-200 text-[#1e293b] text-xs">
+    <div class="flex gap-2 text-emerald-600">
+      <span class="text-sm shrink-0 mt-0.5">✔️</span>
+      <div>
+        <h4 id="standalone-toast-title" class="font-bold text-slate-900">Workbook Saved</h4>
+        <p id="standalone-toast-body" class="text-slate-650 mt-1 font-medium leading-relaxed"></p>
+        <div class="text-[10px] text-slate-400 mt-2 italic font-semibold">Note: Standard browser security downloads the file. Check your downloads directory to place in manual destination.</div>
+      </div>
+    </div>
+    <button onclick="document.getElementById('standalone-toast-banner').classList.add('hidden')" class="text-slate-400 hover:text-[#e81123] p-0.5 shrink-0">✕</button>
+  </div>
 </body>
 </html>
