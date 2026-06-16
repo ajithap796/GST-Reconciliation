@@ -252,7 +252,7 @@
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
             AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.2</span>
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.3</span>
           </h1>
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
@@ -1554,6 +1554,12 @@
               height = 24;
             }
           }
+
+          if (isSummary) {
+            if (R === 0) height = 36;
+            else if (R === 1) height = 28;
+            else height = 22;
+          }
           rowHeights.push({ hpt: height });
 
           for (let C = range.s.c; C <= range.e.c; C++) {
@@ -1574,50 +1580,119 @@
                 }
               }
 
-               if (valStr.length > colWidths[C]) {
+              if (valStr.length > colWidths[C]) {
                 colWidths[C] = valStr.length;
               }
 
-              if (R < headerRowsCount) {
-                cell.s = {
-                  fill: { fgColor: { rgb: isSummary && R === 0 ? "CBD5E1" : "E2E8F0" } },
-                  font: { bold: true, color: { rgb: "0F172A" }, name: "Calisto MT", sz: 10 },
-                  alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                  border: {
-                    top: { style: "thin", color: { rgb: "94A3B8" } },
-                    bottom: { style: "medium", color: { rgb: "94A3B8" } },
-                    left: { style: "thin", color: { rgb: "94A3B8" } },
-                    right: { style: "thin", color: { rgb: "94A3B8" } }
-                  }
-                };
-              } else {
-                const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
-                const firstCell = ws[firstCellRef];
-                const isTotalRow = firstCell && String(firstCell.v).toUpperCase().includes('TOTAL');
-
-                if (isTotalRow) {
+              if (isSummary) {
+                if (R === 0) {
                   cell.s = {
-                    font: { bold: true, name: "Calisto MT", sz: 10 },
-                    fill: { fgColor: { rgb: "F1F5F9" } },
+                    fill: { fgColor: { rgb: "CBD5E1" } },
+                    font: { bold: true, name: "Calisto MT", sz: 12, color: { rgb: "0F172A" } },
+                    alignment: { horizontal: "center", vertical: "center" },
                     border: {
                       top: { style: "thin", color: { rgb: "94A3B8" } },
-                      bottom: { style: "double", color: { rgb: "475569" } },
-                      left: { style: "thin", color: { rgb: "E2E8F0" } },
-                      right: { style: "thin", color: { rgb: "E2E8F0" } }
-                    },
-                    alignment: { vertical: "center", horizontal: "right" }
-                  };
-                } else {
-                  cell.s = {
-                    font: { name: "Calisto MT", sz: 9 },
-                    alignment: { vertical: "center", horizontal: isNumeric ? "right" : "left" },
-                    border: {
-                      top: { style: "thin", color: { rgb: "E2E8F0" } },
-                      bottom: { style: "thin", color: { rgb: "E2E8F0" } },
-                      left: { style: "thin", color: { rgb: "E2E8F0" } },
-                      right: { style: "thin", color: { rgb: "E2E8F0" } }
+                      bottom: { style: "medium", color: { rgb: "475569" } },
+                      left: { style: "thin", color: { rgb: "94A3B8" } },
+                      right: { style: "thin", color: { rgb: "94A3B8" } }
                     }
                   };
+                } else if (R === 1) {
+                  cell.s = {
+                    fill: { fgColor: { rgb: "E2E8F0" } },
+                    font: { bold: true, name: "Calisto MT", sz: 10, color: { rgb: "0F172A" } },
+                    alignment: { horizontal: C === 0 ? "left" : "right", vertical: "center" },
+                    border: {
+                      top: { style: "thin", color: { rgb: "94A3B8" } },
+                      bottom: { style: "medium", color: { rgb: "475569" } },
+                      left: { style: "thin", color: { rgb: "CBD5E1" } },
+                      right: { style: "thin", color: { rgb: "CBD5E1" } }
+                    }
+                  };
+                } else {
+                  const isAddOrLessHeader = R === 3 || R === 8;
+                  const isCalculationTotal = R === 11;
+                  const isActualTotal = R === 12;
+                  const isDifference = R === 13;
+
+                  let rowBg = "FFFFFF";
+                  let isBold = false;
+                  let borderStyle = {
+                    top: { style: "thin", color: { rgb: "F1F5F9" } },
+                    bottom: { style: "thin", color: { rgb: "F1F5F9" } },
+                    left: { style: "thin", color: { rgb: "F1F5F9" } },
+                    right: { style: "thin", color: { rgb: "F1F5F9" } }
+                  };
+
+                  if (isAddOrLessHeader) {
+                    isBold = true;
+                    rowBg = "F8FAFC";
+                  } else if (isCalculationTotal) {
+                    isBold = true;
+                    rowBg = "F1F5F9";
+                    borderStyle.top = { style: "thin", color: { rgb: "94A3B8" } };
+                    borderStyle.bottom = { style: "thin", color: { rgb: "94A3B8" } };
+                  } else if (isActualTotal) {
+                    isBold = true;
+                    rowBg = "E2E8F0";
+                    borderStyle.top = { style: "thin", color: { rgb: "475569" } };
+                    borderStyle.bottom = { style: "medium", color: { rgb: "475569" } };
+                  } else if (isDifference) {
+                    isBold = true;
+                    rowBg = "F8FAFC";
+                    borderStyle.top = { style: "thin", color: { rgb: "94A3B8" } };
+                    borderStyle.bottom = { style: "double", color: { rgb: "000000" } };
+                  }
+
+                  cell.s = {
+                    font: { bold: isBold, name: "Calisto MT", sz: (isCalculationTotal || isActualTotal || isDifference) ? 10 : 9 },
+                    fill: { fgColor: { rgb: rowBg } },
+                    alignment: { horizontal: C === 0 ? "left" : "right", vertical: "center" },
+                    border: borderStyle
+                  };
+                }
+              } else {
+                if (R < headerRowsCount) {
+                  cell.s = {
+                    fill: { fgColor: { rgb: "E2E8F0" } },
+                    font: { bold: true, color: { rgb: "0F172A" }, name: "Calisto MT", sz: 10 },
+                    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                    border: {
+                      top: { style: "thin", color: { rgb: "94A3B8" } },
+                      bottom: { style: "medium", color: { rgb: "94A3B8" } },
+                      left: { style: "thin", color: { rgb: "94A3B8" } },
+                      right: { style: "thin", color: { rgb: "94A3B8" } }
+                    }
+                  };
+                } else {
+                  const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
+                  const firstCell = ws[firstCellRef];
+                  const isTotalRow = firstCell && String(firstCell.v).toUpperCase().includes('TOTAL');
+
+                  if (isTotalRow) {
+                    cell.s = {
+                      font: { bold: true, name: "Calisto MT", sz: 10 },
+                      fill: { fgColor: { rgb: "F1F5F9" } },
+                      border: {
+                        top: { style: "thin", color: { rgb: "94A3B8" } },
+                        bottom: { style: "double", color: { rgb: "475569" } },
+                        left: { style: "thin", color: { rgb: "E2E8F0" } },
+                        right: { style: "thin", color: { rgb: "E2E8F0" } }
+                      },
+                      alignment: { vertical: "center", horizontal: "right" }
+                    };
+                  } else {
+                    cell.s = {
+                      font: { name: "Calisto MT", sz: 9 },
+                      alignment: { vertical: "center", horizontal: isNumeric ? "right" : "left" },
+                      border: {
+                        top: { style: "thin", color: { rgb: "E2E8F0" } },
+                        bottom: { style: "thin", color: { rgb: "E2E8F0" } },
+                        left: { style: "thin", color: { rgb: "E2E8F0" } },
+                        right: { style: "thin", color: { rgb: "E2E8F0" } }
+                      }
+                    };
+                  }
                 }
               }
             }
@@ -1778,53 +1853,82 @@
       applyStylesToSheet(wsGOnly, 1, false);
 
       // 5. Reconciliation Summary with formulas
-      const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
-      const summaryRows = state.summary.map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
-      const wsSummary = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
+      const titleBanner = ['GST Input Tax Credit (ITC) Reconciliation Working Paper', '', '', '', ''];
+      const summaryHeaders = ['Particulars', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
+      const summaryRows = state.summary.map(s => [s.label, s.tv || 0, s.ig || 0, s.cg || 0, s.sg || 0]);
+
+      const wsSummary = XLSX.utils.aoa_to_sheet([titleBanner, summaryHeaders, ...summaryRows]);
+      wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
 
       const idx_m_tot = N_m + 3;
       const idx_d_tot = N_d + 2;
       const idx_b_tot = N_ni2b + 2;
       const idx_g_tot = N_nib + 2;
 
-      // Link values to Sheet totals dynamically using exact formulas
-      wsSummary['B2'] = { t: 'n', f: `='Matched'!E${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C2'] = { t: 'n', f: `='Matched'!F${idx_m_tot}+'Amount Variance'!D${idx_d_tot}+'Not in 2B(Books Only)'!F${idx_b_tot}` };
-      wsSummary['D2'] = { t: 'n', f: `='Matched'!G${idx_m_tot}+'Amount Variance'!E${idx_d_tot}+'Not in 2B(Books Only)'!G${idx_b_tot}` };
-      wsSummary['E2'] = { t: 'n', f: `='Matched'!H${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in 2B(Books Only)'!H${idx_b_tot}` };
+      // Link values to Sheet totals dynamically using exact formulas with fallback static values
+      // Row 3: Input invoices as per accounts (Books) - mapped from idx 0 (state.summary[0])
+      wsSummary['B3'] = { t: 'n', v: state.summary[0].tv || 0, f: `='Matched'!E${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C3'] = { t: 'n', v: state.summary[0].ig || 0, f: `='Matched'!F${idx_m_tot}+'Amount Variance'!D${idx_d_tot}+'Not in 2B(Books Only)'!F${idx_b_tot}` };
+      wsSummary['D3'] = { t: 'n', v: state.summary[0].cg || 0, f: `='Matched'!G${idx_m_tot}+'Amount Variance'!E${idx_d_tot}+'Not in 2B(Books Only)'!G${idx_b_tot}` };
+      wsSummary['E3'] = { t: 'n', v: state.summary[0].sg || 0, f: `='Matched'!H${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in 2B(Books Only)'!H${idx_b_tot}` };
 
-      wsSummary['B3'] = { t: 'n', f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C3'] = { t: 'n', f: `='Not in Books(2B Only)'!F${idx_g_tot}` };
-      wsSummary['D3'] = { t: 'n', f: `='Not in Books(2B Only)'!G${idx_g_tot}` };
-      wsSummary['E3'] = { t: 'n', f: `='Not in Books(2B Only)'!H${idx_g_tot}` };
+      // Row 4 is Add: (Blank)
+      
+      // Row 5: • Input invoices in 2B not in accounts (Missing in Books) - mapped from idx 2 (state.summary[2])
+      wsSummary['B5'] = { t: 'n', v: state.summary[2].tv || 0, f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['C5'] = { t: 'n', v: state.summary[2].ig || 0, f: `='Not in Books(2B Only)'!F${idx_g_tot}` };
+      wsSummary['D5'] = { t: 'n', v: state.summary[2].cg || 0, f: `='Not in Books(2B Only)'!G${idx_g_tot}` };
+      wsSummary['E5'] = { t: 'n', v: state.summary[2].sg || 0, f: `='Not in Books(2B Only)'!H${idx_g_tot}` };
 
-      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!J${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
-      wsSummary['C4'] = { t: 'n', f: `='Amount Variance'!K${idx_d_tot}-'Amount Variance'!D${idx_d_tot}` };
-      wsSummary['D4'] = { t: 'n', f: `='Amount Variance'!L${idx_d_tot}-'Amount Variance'!E${idx_d_tot}` };
-      wsSummary['E4'] = { t: 'n', f: `='Amount Variance'!M${idx_d_tot}-'Amount Variance'!F${idx_d_tot}` };
+      // Row 6: • Reverse Charge (Inward RCM) - mapped from idx 3 (state.summary[3])
+      wsSummary['B6'] = { t: 'n', v: 0 };
+      wsSummary['C6'] = { t: 'n', v: 0 };
+      wsSummary['D6'] = { t: 'n', v: 0 };
+      wsSummary['E6'] = { t: 'n', v: 0 };
 
-      wsSummary['B5'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C5'] = { t: 'n', f: `='Not in 2B(Books Only)'!F${idx_b_tot}` };
-      wsSummary['D5'] = { t: 'n', f: `='Not in 2B(Books Only)'!G${idx_b_tot}` };
-      wsSummary['E5'] = { t: 'n', f: `='Not in 2B(Books Only)'!H${idx_b_tot}` };
+      // Row 7: • Expenses / Other capital credits - mapped from idx 4 (state.summary[4])
+      wsSummary['B7'] = { t: 'n', v: 0 };
+      wsSummary['C7'] = { t: 'n', v: 0 };
+      wsSummary['D7'] = { t: 'n', v: 0 };
+      wsSummary['E7'] = { t: 'n', v: 0 };
 
-      // Reconciled Calculation Column B..E (Row 6 - index 5 - B6)
-      wsSummary['B6'] = { t: 'n', f: `=B2+B3+B4-B5` };
-      wsSummary['C6'] = { t: 'n', f: `=C2+C3+C4-C5` };
-      wsSummary['D6'] = { t: 'n', f: `=D2+D3+D4-D5` };
-      wsSummary['E6'] = { t: 'n', f: `=E2+E3+E4-E5` };
+      // Row 8: • Amount Difference in Accounts (GSTR-2B higher) - mapped from idx 5 (state.summary[5])
+      wsSummary['B8'] = { t: 'n', v: state.summary[5].tv || 0, f: `='Amount Variance'!J${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
+      wsSummary['C8'] = { t: 'n', v: state.summary[5].ig || 0, f: `='Amount Variance'!K${idx_d_tot}-'Amount Variance'!D${idx_d_tot}` };
+      wsSummary['D8'] = { t: 'n', v: state.summary[5].cg || 0, f: `='Amount Variance'!L${idx_d_tot}-'Amount Variance'!E${idx_d_tot}` };
+      wsSummary['E8'] = { t: 'n', v: state.summary[5].sg || 0, f: `='Amount Variance'!M${idx_d_tot}-'Amount Variance'!F${idx_d_tot}` };
 
-      // Actual 2B total (Row 7 - index 6 - B7)
-      wsSummary['B7'] = { t: 'n', f: `='Matched'!N${idx_m_tot}+'Amount Variance'!J${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C7'] = { t: 'n', f: `='Matched'!O${idx_m_tot}+'Amount Variance'!K${idx_d_tot}+'Not in Books(2B Only)'!F${idx_g_tot}` };
-      wsSummary['D7'] = { t: 'n', f: `='Matched'!P${idx_m_tot}+'Amount Variance'!L${idx_d_tot}+'Not in Books(2B Only)'!G${idx_g_tot}` };
-      wsSummary['E7'] = { t: 'n', f: `='Matched'!Q${idx_m_tot}+'Amount Variance'!M${idx_d_tot}+'Not in Books(2B Only)'!H${idx_g_tot}` };
+      // Row 9 is Less: (Blank)
 
-      // Difference Row (Row 8 - index 7 - B8)
-      wsSummary['B8'] = { t: 'n', f: `=B6-B7` };
-      wsSummary['C8'] = { t: 'n', f: `=C6-C7` };
-      wsSummary['D8'] = { t: 'n', f: `=D6-D7` };
-      wsSummary['E8'] = { t: 'n', f: `=E6-E7` };
+      // Row 10: • Input invoices in accounts not in 2B (Missing in 2B) - mapped from idx 7 (state.summary[7])
+      wsSummary['B10'] = { t: 'n', v: state.summary[7].tv || 0, f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C10'] = { t: 'n', v: state.summary[7].ig || 0, f: `='Not in 2B(Books Only)'!F${idx_b_tot}` };
+      wsSummary['D10'] = { t: 'n', v: state.summary[7].cg || 0, f: `='Not in 2B(Books Only)'!G${idx_b_tot}` };
+      wsSummary['E10'] = { t: 'n', v: state.summary[7].sg || 0, f: `='Not in 2B(Books Only)'!H${idx_b_tot}` };
+
+      // Row 11: • Input invoice amended / credits reversed - mapped from idx 8 (state.summary[8])
+      wsSummary['B11'] = { t: 'n', v: 0 };
+      wsSummary['C11'] = { t: 'n', v: 0 };
+      wsSummary['D11'] = { t: 'n', v: 0 };
+      wsSummary['E11'] = { t: 'n', v: 0 };
+
+      // Row 12: Input invoices as per calculation (Reconciled) - mapped from idx 9 (state.summary[9])
+      wsSummary['B12'] = { t: 'n', v: state.summary[9].tv || 0, f: `=B3+B5+B6+B7+B8-B10-B11` };
+      wsSummary['C12'] = { t: 'n', v: state.summary[9].ig || 0, f: `=C3+C5+C6+C7+C8-C10-C11` };
+      wsSummary['D12'] = { t: 'n', v: state.summary[9].cg || 0, f: `=D3+D5+D6+D7+D8-D10-D11` };
+      wsSummary['E12'] = { t: 'n', v: state.summary[9].sg || 0, f: `=E3+E5+E6+E7+E8-E10-E11` };
+
+      // Row 13: Input invoices as per 2B (GSTR-2B Actual Total) - mapped from idx 10 (state.summary[10])
+      wsSummary['B13'] = { t: 'n', v: state.summary[10].tv || 0, f: `='Matched'!N${idx_m_tot}+'Amount Variance'!J${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['C13'] = { t: 'n', v: state.summary[10].ig || 0, f: `='Matched'!O${idx_m_tot}+'Amount Variance'!K${idx_d_tot}+'Not in Books(2B Only)'!F${idx_g_tot}` };
+      wsSummary['D13'] = { t: 'n', v: state.summary[10].cg || 0, f: `='Matched'!P${idx_m_tot}+'Amount Variance'!L${idx_d_tot}+'Not in Books(2B Only)'!G${idx_g_tot}` };
+      wsSummary['E13'] = { t: 'n', v: state.summary[10].sg || 0, f: `='Matched'!Q${idx_m_tot}+'Amount Variance'!M${idx_d_tot}+'Not in Books(2B Only)'!H${idx_g_tot}` };
+
+      // Row 14: Difference (Calculated vs GSTR-2B) - mapped from idx 11 (state.summary[11])
+      wsSummary['B14'] = { t: 'n', v: state.summary[11].tv || 0, f: `=B12-B13` };
+      wsSummary['C14'] = { t: 'n', v: state.summary[11].ig || 0, f: `=C12-C13` };
+      wsSummary['D14'] = { t: 'n', v: state.summary[11].cg || 0, f: `=D12-D13` };
+      wsSummary['E14'] = { t: 'n', v: state.summary[11].sg || 0, f: `=E12-E13` };
 
       // Anchor Hyperlinks inside summary to quickly jump between tabs
       const attachLink = (cell, sheetName) => {
@@ -1836,13 +1940,13 @@
         }
       };
 
-      attachLink('A2', 'Matched');
-      attachLink('A3', 'Not in Books(2B Only)');
-      attachLink('A4', 'Amount Variance');
-      attachLink('A5', 'Not in 2B(Books Only)');
-      attachLink('A7', 'Matched');
+      attachLink('A3', 'Matched');
+      attachLink('A5', 'Not in Books(2B Only)');
+      attachLink('A8', 'Amount Variance');
+      attachLink('A10', 'Not in 2B(Books Only)');
+      attachLink('A13', 'Matched');
 
-      applyStylesToSheet(wsSummary, 1, true);
+      applyStylesToSheet(wsSummary, 2, true);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
       XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
       XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
