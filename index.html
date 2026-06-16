@@ -252,7 +252,7 @@
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
             AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.3</span>
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.4</span>
           </h1>
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
@@ -330,6 +330,9 @@
             </div>
           </div>
 
+          <!-- SHEET SELECTION CONFIGURATION -->
+          <div id="books-sheet-container" class="hidden flex items-center justify-between gap-2 bg-blue-50/50 border border-blue-100 rounded-lg p-2 mt-2"></div>
+
           <!-- START ROW CONFIGURATION -->
           <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
             <div>
@@ -372,6 +375,9 @@
               <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
             </div>
           </div>
+
+          <!-- SHEET SELECTION CONFIGURATION -->
+          <div id="gstr2b-sheet-container" class="hidden flex items-center justify-between gap-2 bg-emerald-50/50 border border-emerald-100 rounded-lg p-2 mt-2"></div>
 
           <!-- START ROW CONFIGURATION -->
           <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
@@ -549,8 +555,8 @@
   <script>
     // System registry states
     const state = {
-      books: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null },
-      gstr2b: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null },
+      books: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: '' },
+      gstr2b: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: '' },
       results: null,
       summary: [],
       chartInstances: [],
@@ -722,7 +728,9 @@
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.SheetNames[0];
+          const sheetNames = workbook.SheetNames || [];
+          if (sheetNames.length === 0) throw new Error('No sheets found in this file workbook');
+          const firstSheet = sheetNames[0];
           const sheet = workbook.Sheets[firstSheet];
           const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
@@ -730,6 +738,27 @@
 
           state[side].rawGrid = rawRows;
           state[side].fileName = file.name;
+          state[side].workbook = workbook;
+          state[side].sheetNames = sheetNames;
+          state[side].currentSheet = firstSheet;
+
+          // Render sheet selector if multiple sheets exist
+          const sheetContainer = document.getElementById(`${side}-sheet-container`);
+          if (sheetNames.length > 1 && sheetContainer) {
+            sheetContainer.classList.remove('hidden');
+            sheetContainer.innerHTML = `
+              <div>
+                <label class="text-[10px] font-black text-slate-500 uppercase block">Select Excel Sheet</label>
+                <span class="text-[10px] text-${side === 'books' ? 'blue' : 'emerald'}-600 font-bold tracking-wide">${sheetNames.length} sheets found</span>
+              </div>
+              <select onchange="handleStandaloneSheetChange(this.value, '${side}')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-white text-slate-800 max-w-[170px] truncate">
+                ${sheetNames.map(name => `<option value="${escapeString(name)}" ${name === firstSheet ? 'selected' : ''}>${escapeString(name)}</option>`).join('')}
+              </select>
+            `;
+          } else if (sheetContainer) {
+            sheetContainer.classList.add('hidden');
+            sheetContainer.innerHTML = '';
+          }
 
           reprocessLoadedFile(side);
 
@@ -803,12 +832,44 @@
       evaluateActivation();
     }
 
+    function handleStandaloneSheetChange(sheetName, side) {
+      const workbook = state[side].workbook;
+      if (!workbook) return;
+
+      try {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) return;
+        const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+        if (rawRows.length === 0) {
+          alert('This sheet inside the workbook is empty');
+          return;
+        }
+
+        state[side].rawGrid = rawRows;
+        state[side].currentSheet = sheetName;
+
+        const startRowSel = document.getElementById(`${side}-start-row`);
+        if (startRowSel) {
+          startRowSel.value = '1';
+        }
+
+        reprocessLoadedFile(side);
+        state.results = null;
+      } catch (err) {
+        alert(`Error changing sheet: ${err.message || err}`);
+      }
+    }
+
     function removeAttachedFile(side) {
       state[side].rawHeaders = [];
       state[side].rawRows = [];
       state[side].mapping = {};
       state[side].processed = [];
       state[side].rawGrid = null;
+      state[side].workbook = null;
+      state[side].sheetNames = [];
+      state[side].currentSheet = '';
       state.results = null;
 
       resetTrackerUI(side);
@@ -825,6 +886,12 @@
         <p class="text-sm font-bold text-slate-700">${labelDesc}</p>
         <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
       `;
+
+      const sheetContainer = document.getElementById(`${side}-sheet-container`);
+      if (sheetContainer) {
+        sheetContainer.classList.add('hidden');
+        sheetContainer.innerHTML = '';
+      }
 
       document.getElementById('dashboard-metrics-container').classList.add('hidden');
       document.getElementById('app-landing-instructions').classList.remove('hidden');
