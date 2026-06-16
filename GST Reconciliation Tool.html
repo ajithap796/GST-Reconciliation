@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.0 Standalone)</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- sheetjs (XLSX) library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tab-btn {
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      border-color: var(--tab-color, #2563eb);
+      color: var(--tab-color, #2563eb);
+      background: #ffffff;
+      font-weight: 850;
+    }
+    .upload-zone {
+      border: 2px dashed;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .upload-zone:hover {
+      background-color: rgba(239, 246, 255, 0.6);
+      border-color: #3b82f6;
+    }
+    .upload-zone.drag {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+      transform: scale(1.01);
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      color: #334155;
+      white-space: nowrap;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    tr:hover td {
+      background: #f8fafc;
+    }
+    tfoot td {
+      background: #f1f5f9;
+      font-weight: 800;
+      color: #0f172a;
+      border-top: 2px solid #94a3b8;
+    }
+    .summary-section td {
+      font-weight: 800;
+      color: #1e3a8a;
+      background: #f0fdf4;
+    }
+    .summary-total td {
+      background: #f1f5f9;
+      font-weight: 800;
+      border-top: 2px solid #64748b;
+      border-bottom: 2px solid #64748b;
+      color: #0f172a;
+    }
+    .summary-diff td {
+      background: #fef9c3;
+      font-weight: 800;
+      border-top: 2px solid #fbbf24;
+      border-bottom: 2px solid #fbbf24;
+    }
+    .summary-indent td:first-child {
+      padding-left: 24px;
+    }
+    .spinner {
+      border: 3px solid #e2e8f0;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .match-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .tier-1 { background: #dcfce7; color: #15803d; }
+    .tier-2 { background: #fee2e2; color: #b91c1c; }
+    .tier-3 { background: #fef3c7; color: #d97706; }
+    .tier-4 { background: #e0e7ff; color: #4338ca; }
+    .tier-5 { background: #f1f5f9; color: #475569; }
+  </style>
+</head>
+<body class="text-slate-900 border-t-4 border-blue-600 min-h-screen flex flex-col">
+
+  <!-- STANDALONE APP HEADER -->
+  <header class="bg-slate-900 text-white shadow-xl py-4 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <!-- SVG LOGO -->
+        <div class="relative shrink-0 select-none overflow-hidden rounded-[22%] bg-slate-950 border border-slate-800 shadow-xl shadow-black/50 flex items-center justify-center p-1.5 w-14 h-14">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+            <defs>
+              <linearGradient id="silverChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f8fafc"></stop>
+                <stop offset="15%" stop-color="#e2e8f0"></stop>
+                <stop offset="35%" stop-color="#94a3b8"></stop>
+                <stop offset="50%" stop-color="#f1f5f9"></stop>
+                <stop offset="65%" stop-color="#475569"></stop>
+                <stop offset="85%" stop-color="#cbd5e1"></stop>
+                <stop offset="100%" stop-color="#334155"></stop>
+              </linearGradient>
+              <linearGradient id="silverShine" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"></stop>
+                <stop offset="50%" stop-color="#cbd5e1" stop-opacity="0.3"></stop>
+                <stop offset="100%" stop-color="#1e293b" stop-opacity="0.9"></stop>
+              </linearGradient>
+              <linearGradient id="cobaltBlue" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#1e3a8a"></stop>
+                <stop offset="25%" stop-color="#1d4ed8"></stop>
+                <stop offset="50%" stop-color="#2563eb"></stop>
+                <stop offset="70%" stop-color="#3b82f6"></stop>
+                <stop offset="90%" stop-color="#60a5fa"></stop>
+                <stop offset="100%" stop-color="#93c5fd"></stop>
+              </linearGradient>
+              <radialGradient id="radialShine" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#1e293b"></stop>
+                <stop offset="45%" stop-color="#0f172a"></stop>
+                <stop offset="80%" stop-color="#020617"></stop>
+                <stop offset="100%" stop-color="#000000"></stop>
+              </radialGradient>
+              <filter id="logoDropShadow" x="-15%" y="-15%" width="130%" height="130%">
+                <feDropShadow dx="1" dy="1.5" stdDeviation="1.2" flood-color="#000000" flood-opacity="0.85"></feDropShadow>
+              </filter>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="1.5" result="blur"></feGaussianBlur>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"></feComposite>
+              </filter>
+            </defs>
+            <circle cx="50" cy="50" r="45" fill="url(#radialShine)"></circle>
+            <circle cx="50" cy="50" r="44.2" stroke="url(#silverShine)" stroke-width="0.8" stroke-opacity="0.6"></circle>
+            <path d="M 24 71 A 31 31 0 1 1 73 24" stroke="url(#silverChrome)" stroke-width="3.4" stroke-linecap="round" filter="url(#logoDropShadow)"></path>
+            <path d="M 81 37 A 31 31 0 0 1 72 73" stroke="url(#silverChrome)" stroke-width="2.8" stroke-linecap="round" filter="url(#logoDropShadow)"></path>
+            <circle cx="50" cy="50" r="37" stroke="#2563eb" stroke-width="1" stroke-dasharray="3 15" stroke-opacity="0.4"></circle>
+            <g filter="url(#logoDropShadow)">
+              <path d="M 69 31 C 69 31 69 64 69 65 C 69 75 51 75 51 65 L 59 65 C 59 69 62.5 69 62.5 65 C 62.5 64 62.5 31 62.5 31 Z" fill="url(#cobaltBlue)"></path>
+              <path d="M 50 17 L 26 71 L 33.5 71 L 41 52.5 L 59 52.5 L 66.5 71 L 74 71 Z" fill="url(#silverChrome)"></path>
+              <path d="M 50 31.5 L 56.5 46.5 L 43.5 46.5 Z" fill="url(#radialShine)"></path>
+              <rect x="43" y="47.5" width="14" height="2" fill="#ffffff" opacity="0.15"></rect>
+              <rect x="41.5" y="51" width="17" height="1.5" fill="#ffffff" opacity="0.4"></rect>
+            </g>
+            <polygon points="50,17 51,20 49,20" fill="#ffffff" opacity="0.9" filter="url(#glow)"></polygon>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
+            AJ Innovation &amp; Design
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Converter v1.0</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">DUAL-ENGINE PARSER &amp; INTEGRITY LEDGER</p>
+        </div>
+      </div>
+      <div id="runtime-controls" class="hidden flex items-center gap-2">
+        <button onclick="exportReconciliationReport()" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-md cursor-pointer">
+          📥 Download Linked Excel Workbook
+        </button>
+        <button onclick="restartWorkspace()" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition border border-slate-700 cursor-pointer">
+          ↺ Reset App
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT VIEWPORTS -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+    
+    <!-- FILE SELECTORS CARD -->
+    <div id="file-uploader-panel" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Upload Spreadsheet Invoices</h2>
+          <p class="text-xs text-slate-500 font-medium">Add books of account alongside GSTR-2B download archives to initiate matching logic.</p>
+        </div>
+        <button onclick="toggleFieldMapper()" id="mapper-trigger-btn" class="hidden text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200">
+          ⚙ Field Mapping Selection <span id="mapper-angle">▼</span>
+        </button>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 font-sans">
+        <!-- BOOKS DRAG AND DROP -->
+        <div class="space-y-2 bg-slate-50/50 p-4 border border-slate-150 rounded-xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-widest">Purchase Ledger (Books)</span>
+            <span class="text-xs font-semibold text-slate-400">Ledger entries</span>
+          </div>
+          
+          <div id="books-drop" class="upload-zone rounded-xl p-8 flex flex-col items-center justify-center text-center bg-white border-slate-200"
+               ondragover="setDragOver(event, 'books')" ondragleave="cancelDrag('books')" ondrop="handleFileDrop(event, 'books')" onclick="triggerFileInput('books')">
+            <input type="file" id="books-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelected(event, 'books')">
+            <div id="books-upload-indicator" class="space-y-2">
+              <span class="text-3xl block">📊</span>
+              <p class="text-sm font-bold text-slate-700">Drop Purchase Register here</p>
+              <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
+            </div>
+          </div>
+
+          <!-- START ROW CONFIGURATION -->
+          <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
+            <div>
+              <label class="text-[10px] font-black text-slate-500 uppercase block">Data starts on row</label>
+              <span class="text-[10px] text-slate-400 font-medium">Select where headers are located</span>
+            </div>
+            <select id="books-start-row" onchange="reprocessLoadedFile('books')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-slate-50 text-slate-800">
+              <option value="1" selected>Row 1 (Default)</option>
+              <option value="2">Row 2</option>
+              <option value="3">Row 3</option>
+              <option value="4">Row 4</option>
+              <option value="5">Row 5</option>
+              <option value="6">Row 6</option>
+              <option value="7">Row 7</option>
+              <option value="8">Row 8</option>
+              <option value="9">Row 9</option>
+              <option value="10">Row 10</option>
+              <option value="11">Row 11</option>
+              <option value="12">Row 12</option>
+              <option value="13">Row 13</option>
+              <option value="14">Row 14</option>
+              <option value="15">Row 15</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- GSTR-2B DRAG AND DROP -->
+        <div class="space-y-2 bg-slate-50/50 p-4 border border-slate-150 rounded-xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 uppercase tracking-widest">GSTR-2B Portal Download</span>
+            <span class="text-xs font-semibold text-slate-400">Government Portal statement</span>
+          </div>
+          
+          <div id="gstr2b-drop" class="upload-zone rounded-xl p-8 flex flex-col items-center justify-center text-center bg-white border-slate-200"
+               ondragover="setDragOver(event, 'gstr2b')" ondragleave="cancelDrag('gstr2b')" ondrop="handleFileDrop(event, 'gstr2b')" onclick="triggerFileInput('gstr2b')">
+            <input type="file" id="gstr2b-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelected(event, 'gstr2b')">
+            <div id="gstr2b-upload-indicator" class="space-y-2">
+              <span class="text-3xl block">🧾</span>
+              <p class="text-sm font-bold text-slate-700">Drop GSTR-2B Download here</p>
+              <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
+            </div>
+          </div>
+
+          <!-- START ROW CONFIGURATION -->
+          <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
+            <div>
+              <label class="text-[10px] font-black text-slate-500 uppercase block">Data starts on row</label>
+              <span class="text-[10px] text-slate-400 font-medium">Select where headers are located</span>
+            </div>
+            <select id="gstr2b-start-row" onchange="reprocessLoadedFile('gstr2b')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-slate-50 text-slate-800">
+              <option value="1" selected>Row 1 (Default)</option>
+              <option value="2">Row 2</option>
+              <option value="3">Row 3</option>
+              <option value="4">Row 4</option>
+              <option value="5">Row 5</option>
+              <option value="6">Row 6</option>
+              <option value="7">Row 7</option>
+              <option value="8">Row 8</option>
+              <option value="9">Row 9</option>
+              <option value="10">Row 10</option>
+              <option value="11">Row 11</option>
+              <option value="12">Row 12</option>
+              <option value="13">Row 13</option>
+              <option value="14">Row 14</option>
+              <option value="15">Row 15</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- FIELD MAPPER PANEL -->
+      <div id="field-mapper" class="hidden border-t border-slate-200 pt-6 space-y-4">
+        <p class="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+          💡 If column headers in your spreadsheets differ from typical names, select standard headers manually to ensure correct parser indexing.
+        </p>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-1.5 flex items-center gap-1">📖 Books Mapping Coordinates</h3>
+            <div id="books-mapper-fields" class="space-y-2"></div>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-1.5 flex items-center gap-1">🧾 GSTR-2B Mapping Coordinates</h3>
+            <div id="gstr2b-mapper-fields" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG & RUN BUTTONS -->
+      <div class="border-t border-slate-200 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex flex-col gap-1 w-full sm:w-auto">
+          <label class="text-xs font-bold text-slate-605 uppercase tracking-wide">Fallback Matching Mode Rule</label>
+          <select id="matching-mode" class="p-2 border border-slate-300 rounded-lg text-sm font-bold bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 h-9 shrink-0">
+            <option value="auto" selected>Auto (Hierarchical fallback passes 1-5)</option>
+            <option value="tier1">Strictly: Taxable Value + Name Match + Date Match (Tier 1)</option>
+            <option value="tier2">Strictly: Taxable Value + Name Similarity (Tier 2)</option>
+            <option value="tier3">Strictly: Taxable Value + Date Match (Tier 3)</option>
+            <option value="tier4">Strictly: Exact Invoice Number + Taxable Value Match (Tier 4)</option>
+            <option value="tier5">Identifier Only: Loose Invoice Document Match (Tier 5)</option>
+          </select>
+        </div>
+
+        <button id="run-reconcile-btn" onclick="startMatchingProcess()" disabled
+                class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition h-10 cursor-pointer">
+          ▶ Start Match Calculation
+        </button>
+      </div>
+
+      <!-- PROCESS PROGRESS -->
+      <div id="prog-wrap" class="hidden pt-3 space-y-1.5">
+        <div class="flex justify-between items-center text-xs font-bold">
+          <span id="prog-lbl" class="text-slate-600">Reconciling records...</span>
+          <span id="prog-pct" class="text-blue-600">0%</span>
+        </div>
+        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+          <div id="prog-fill" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-100" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTIONS CONTAINER when empty -->
+    <div id="app-landing-instructions" class="border-2 border-dashed border-slate-300 bg-white rounded-2xl p-12 text-center max-w-2xl mx-auto space-y-4">
+      <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-650 flex items-center justify-center mx-auto text-xl shadow-inner shadow-blue-200">📈</div>
+      <div class="space-y-2">
+        <h3 class="text-base font-black text-slate-800">GST Client Sandbox Ledger Engine</h3>
+        <p class="text-sm text-slate-500 font-medium leading-relaxed">
+          Upload spreadsheets containing books and downloaded portals to initiate calculations. All data is processed entirely in your browser locally, utilizing secure client-side sandbox computations. No data is sent to a server.
+        </p>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE DASHBOARDS -->
+    <div id="dashboard-metrics-container" class="hidden space-y-8">
+      
+      <!-- GRID METRIC CARDS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stat-grid-row"></div>
+
+      <!-- CHARTS PANEL -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest pb-3 border-b border-slate-150 flex items-center gap-1.5">📊 Status Distribution Breakdown</h3>
+          <div class="h-64 w-full relative pt-4 flex items-center justify-center">
+            <canvas id="status-donut-canvas"></canvas>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest pb-3 border-b border-slate-150 flex items-center gap-1.5">💰 GST Value Aligned (Books vs GSTR-2B)</h3>
+          <div class="h-64 w-full pt-4">
+            <canvas id="val-bar-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB SELECTION PANELS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+        
+        <!-- HEADER BUTTONS -->
+        <div class="flex border-b border-slate-200 bg-slate-50 overflow-x-auto scrollbar-thin">
+          <button onclick="switchTab('matched', this)" class="tab-btn active px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-emerald-800 border-emerald-600 active" style="--tab-color: #10b981">
+            ✓ Fully Matched <span id="lbl-c-matched" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-extrabold ml-1">0</span>
+          </button>
+          <button onclick="switchTab('amtdiff', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f59e0b">
+            ⚠ Amount Differs <span id="lbl-c-amtdiff" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-extrabold ml-1">0</span>
+          </button>
+          <button onclick="switchTab('notIn2B', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f43f5e">
+            ✕ Not in 2B (Books Only) <span id="lbl-c-ni2b" class="px-2 py-0.5 rounded-full text-[10px] bg-red-100 text-red-800 font-extrabold ml-1">0</span>
+          </button>
+          <button onclick="switchTab('notInBooks', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f97316">
+            ✕ Not in Books (2B Only) <span id="lbl-c-nib" class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800 font-extrabold ml-1">0</span>
+          </button>
+          <button onclick="switchTab('recosheet', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #3b82f6">
+            📋 Working Paper Summary
+          </button>
+        </div>
+
+        <!-- SEARCH FILTERS VIEW -->
+        <div id="table-search-panel" class="bg-white border-b border-slate-100 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full sm:max-w-xs">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔍</span>
+            <input type="text" id="recon-search-box" oninput="applyFilters()" placeholder="Search Invoice No, Supplier, GSTIN..."
+                   class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="w-full sm:w-auto flex items-center gap-2 justify-end">
+            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Vendor filter:</label>
+            <select id="recon-vendor-filter" onchange="applyFilters()" class="p-1 px-2 border border-slate-300 rounded text-xs font-medium max-w-xs bg-slate-50">
+              <option value="">-- All Suppliers --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LIST VIEWS -->
+        <div class="p-6">
+          <div id="tab-viewport-matched" class="tab-pane space-y-4"></div>
+          <div id="tab-viewport-amtdiff" class="tab-pane hidden space-y-4"></div>
+          <div id="tab-viewport-notIn2B" class="tab-pane hidden space-y-4"></div>
+          <div id="tab-viewport-notInBooks" class="tab-pane hidden space-y-4"></div>
+          <div id="tab-viewport-recosheet" class="tab-pane hidden space-y-4"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- BOTTOM FOOTER -->
+  <footer class="border-t border-slate-200 bg-slate-50 py-4 px-6 text-center mt-12 bg-white flex items-center justify-between">
+    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-left">
+      GST Reconciliation Tool — Client Sandbox Engine — Zero Server Latency · 100% Secure Private Offline Client
+    </p>
+    <p class="text-[10px] text-slate-550 font-black uppercase tracking-wider text-right text-blue-600">
+      Branding Designed by AJ — AJ v1.0
+    </p>
+  </footer>
+
+  <!-- =====================================================================
+       STANDALONE RECONCILIATION ENGINE JAVASCRIPT
+       ===================================================================== -->
+  <script>
+    // System registry states
+    const state = {
+      books: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null },
+      gstr2b: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null },
+      results: null,
+      summary: [],
+      chartInstances: [],
+      activeTab: 'matched'
+    };
+
+    const COLS_DEFINITION = {
+      supplierName: "Supplier / Party Name",
+      gstin: "GSTIN of Supplier",
+      invoiceNo: "Invoice Number",
+      invoiceDate: "Invoice Date",
+      taxableValue: "Taxable Value",
+      igst: "IGST Amount",
+      cgst: "CGST Amount",
+      sgst: "SGST / UTGST Amount",
+      totalGst: "Total GST Amount"
+    };
+
+    const COL_AUTO_REGEX_PATTERNS = {
+      supplierName: [/supplier.*name/i, /vendor.*name/i, /party.*name/i, /trade.*name/i, /legal.*name/i, /company.*name/i, /\bsupplier\b/i, /\bvendor\b/i, /\bparty\b/i],
+      gstin: [/gstin/i, /gst.*no/i, /gst.*num/i, /supplier.*gst/i, /party.*gst/i],
+      invoiceNo: [/inv.*no/i, /inv.*num/i, /bill.*no/i, /doc.*no/i, /voucher/i, /invoice/i, /doc.*id/i],
+      invoiceDate: [/inv.*date/i, /bill.*date/i, /date.*of.*issue/i, /doc.*date/i, /\bdate\b/i],
+      taxableValue: [/taxable.*value/i, /taxable.*amt/i, /base.*amount/i, /assessable/i, /taxable/i],
+      igst: [/igst/i, /i\.gst/i, /integrated/i],
+      cgst: [/cgst/i, /c\.gst/i, /central/i],
+      sgst: [/sgst/i, /s\.gst/i, /state.*tax/i, /utgst/i, /state/i],
+      totalGst: [/total.*gst/i, /gst.*amount/i, /total.*tax/i, /tax.*amount/i]
+    };
+
+    // Formatting utilities
+    function formatIndianCurrency(n) {
+      if (n === undefined || n === null || isNaN(n)) return '—';
+      return Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    }
+
+    function formatShortK(n) {
+      if (Math.abs(n) >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
+      if (Math.abs(n) >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
+      return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    function escapeString(s) {
+      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function parseNumericString(v) {
+      if (v === null || v === undefined || v === '') return 0;
+      if (typeof v === 'number') return v;
+      const parsed = Number(String(v).replace(/[,\s₹]/g, ''));
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function parseNumericExcelDate(v) {
+      if (!v) return null;
+      if (typeof v === 'number') {
+        const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+        return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      }
+      return String(v).replace(/[-\.]/g, '/').trim();
+    }
+
+    // Alignment and similarity rules
+    function normalizePartyName(raw) {
+      if (!raw) return '';
+      return String(raw)
+        .toUpperCase()
+        .replace(/\b(PVT\.?\s*LTD\.?|PRIVATE\s+LIMITED|LIMITED|LTD\.?|LLP|INC\.?|CORP\.?|CO\.?|COMPANY|ENTERPRISES?|TRADING|INDIA|AND|&)\b/g, ' ')
+        .replace(/[^A-Z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function normalizeInvoiceNo(raw) {
+      if (!raw) return '';
+      return String(raw)
+        .replace(/[\s\/\-\\]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .replace(/^0+/, '')
+        .toUpperCase();
+    }
+
+    function assessNameSimilarity(setA, setB) {
+      if (!setA.size || !setB.size) return 0;
+      let matches = 0;
+      for (const w of setA) {
+        if (setB.has(w)) {
+          matches++;
+          continue;
+        }
+        for (const ww of setB) {
+          if (w.length >= 3 && ww.length >= 3 && (w.startsWith(ww) || ww.startsWith(w))) {
+            matches += 0.6;
+            break;
+          }
+        }
+      }
+      return matches / Math.max(setA.size, setB.size);
+    }
+
+    function testInvoiceSlidings(bn, gn) {
+      if (!bn || !gn) return false;
+      if (bn === gn) return true;
+      for (let len = 4; len <= 8; len++) {
+        const bs = bn.slice(-len);
+        const gs = gn.slice(-len);
+        if (bs && gs && bs === gs && /^\d+$/.test(bs)) return true;
+      }
+      return gn.endsWith(bn) || bn.endsWith(gn) || gn.includes(bn) || bn.includes(gn);
+    }
+
+    // Auto Column Mapping
+    function runAutoDetection(headers) {
+      const mapping = {};
+      const used = new Set();
+      const keys = ['invoiceNo', 'taxableValue', 'igst', 'cgst', 'sgst', 'totalGst', 'gstin', 'supplierName', 'invoiceDate'];
+
+      for (const key of keys) {
+        for (const h of headers) {
+          if (used.has(h)) continue;
+          const patterns = COL_AUTO_REGEX_PATTERNS[key] || [];
+          if (patterns.some(p => p.test(h))) {
+            mapping[key] = h;
+            used.add(h);
+            break;
+          }
+        }
+      }
+      return mapping;
+    }
+
+    // Input handlers Trigger
+    function triggerFileInput(side) {
+      document.getElementById(`${side}-file-input`).click();
+    }
+
+    function setDragOver(e, side) {
+      e.preventDefault();
+      document.getElementById(`${side}-drop`).classList.add('drag');
+    }
+
+    function cancelDrag(side) {
+      document.getElementById(`${side}-drop`).classList.remove('drag');
+    }
+
+    function handleFileDrop(e, side) {
+      e.preventDefault();
+      cancelDrag(side);
+      const file = e.dataTransfer.files[0];
+      if (file) loadLocalFile(file, side);
+    }
+
+    function handleFileSelected(e, side) {
+      const file = e.target.files[0];
+      if (file) loadLocalFile(file, side);
+    }
+
+    function loadLocalFile(file, side) {
+      const indicator = document.getElementById(`${side}-upload-indicator`);
+      indicator.innerHTML = `
+        <div class="flex flex-col items-center gap-2">
+          <div class="spinner"></div>
+          <span class="text-xs font-bold text-slate-500">Scanning data array...</span>
+        </div>
+      `;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[firstSheet];
+          const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+          if (rawRows.length === 0) throw new Error('Sheet data looks empty.');
+
+          state[side].rawGrid = rawRows;
+          state[side].fileName = file.name;
+
+          reprocessLoadedFile(side);
+
+          // Customize visual success badge
+          indicator.innerHTML = `
+            <div class="flex items-center justify-between gap-3 text-left w-full bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-sm">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">✅</span>
+                <div>
+                  <p class="text-xs font-extrabold text-slate-800 uppercase tracking-tight truncate max-w-[190px]">${escapeString(file.name)}</p>
+                  <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Connected Successfully</p>
+                </div>
+              </div>
+              <button onclick="removeAttachedFile('${side}'); event.stopPropagation()" class="text-xs font-bold text-slate-400 hover:text-red-500 p-1">✕</button>
+            </div>
+          `;
+
+          document.getElementById('mapper-trigger-btn').classList.remove('hidden');
+        } catch (err) {
+          alert(`Spreadsheet parsing error: ${err.message || err}`);
+          resetTrackerUI(side);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Process & Slices rows based on StartRow selection
+    function reprocessLoadedFile(side) {
+      const rawRows = state[side].rawGrid;
+      if (!rawRows || rawRows.length === 0) return;
+
+      const startRowSel = document.getElementById(`${side}-start-row`);
+      const startRowVal = parseInt(startRowSel ? startRowSel.value : '1', 10);
+      const headerIdx = startRowVal - 1;
+
+      const headers = (rawRows[headerIdx] || []).map(h => String(h ?? '').trim()).filter(Boolean);
+      const rows = [];
+
+      for (let r = startRowVal; r < rawRows.length; r++) {
+        const rowData = rawRows[r];
+        const obj = {};
+        let hasTrueData = false;
+
+        headers.forEach((h, index) => {
+          const val = rowData[index];
+          obj[h] = val ?? '';
+          if (val !== '' && val !== null && val !== undefined) hasTrueData = true;
+        });
+
+        if (hasTrueData) rows.push(obj);
+      }
+
+      state[side].rawHeaders = headers;
+      state[side].rawRows = rows;
+      
+      // Auto-detect mappings but preserve existing valid inputs
+      const freshMap = runAutoDetection(headers);
+      const updatedMap = {};
+      Object.keys(COLS_DEFINITION).forEach(k => {
+        const prev = state[side].mapping[k];
+        if (prev && headers.includes(prev)) {
+          updatedMap[k] = prev;
+        } else {
+          updatedMap[k] = freshMap[k] || '';
+        }
+      });
+      state[side].mapping = updatedMap;
+
+      renderMappingTables(side);
+      evaluateActivation();
+    }
+
+    function removeAttachedFile(side) {
+      state[side].rawHeaders = [];
+      state[side].rawRows = [];
+      state[side].mapping = {};
+      state[side].processed = [];
+      state[side].rawGrid = null;
+      state.results = null;
+
+      resetTrackerUI(side);
+      evaluateActivation();
+    }
+
+    function resetTrackerUI(side) {
+      const emoji = side === 'books' ? '📊' : '🧾';
+      const labelDesc = side === 'books' ? 'Drop Purchase Register here' : 'Drop GSTR-2B Download here';
+      
+      document.getElementById(`${side}-file-input`).value = '';
+      document.getElementById(`${side}-upload-indicator`).innerHTML = `
+        <span class="text-3xl block">${emoji}</span>
+        <p class="text-sm font-bold text-slate-700">${labelDesc}</p>
+        <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
+      `;
+
+      document.getElementById('dashboard-metrics-container').classList.add('hidden');
+      document.getElementById('app-landing-instructions').classList.remove('hidden');
+    }
+
+    function renderMappingTables(side) {
+      const parent = document.getElementById(`${side}-mapper-fields`);
+      const headers = state[side].rawHeaders;
+      const currentMap = state[side].mapping;
+
+      parent.innerHTML = Object.entries(COLS_DEFINITION).map(([k, label]) => `
+        <div class="flex items-center justify-between gap-3 bg-white px-3 py-2 rounded-lg border border-slate-200 text-xs shadow-sm">
+          <label class="font-bold text-slate-650 w-1/3 truncate" title="${label}">${label}</label>
+          <select onchange="updateMappingValue('${side}', '${k}', this.value)"
+                  class="w-2/3 max-w-xs p-1 px-1.5 border border-slate-300 rounded text-xs text-slate-750 font-medium bg-slate-50 focus:bg-white focus:outline-none">
+            <option value="">-- Ignore --</option>
+            ${headers.map(h => `<option value="${escapeString(h)}" ${currentMap[k] === h ? 'selected' : ''}>${escapeString(h)}</option>`).join('')}
+          </select>
+        </div>
+      `).join('');
+    }
+
+    function updateMappingValue(side, fieldKey, val) {
+      state[side].mapping[fieldKey] = val || undefined;
+    }
+
+    let mapperExpanded = false;
+    function toggleFieldMapper() {
+      mapperExpanded = !mapperExpanded;
+      document.getElementById('field-mapper').classList.toggle('hidden', !mapperExpanded);
+      document.getElementById('mapper-angle').textContent = mapperExpanded ? '▲' : '▼';
+    }
+
+    function evaluateActivation() {
+      const isReady = state.books.rawRows.length > 0 && state.gstr2b.rawRows.length > 0;
+      document.getElementById('run-reconcile-btn').disabled = !isReady;
+    }
+
+    // Mapping rows algorithm
+    function extractStructuredRows(rows, mapping) {
+      return rows.map((r, idx) => {
+        let invNo = mapping.invoiceNo ? String(r[mapping.invoiceNo] ?? '').trim() : '';
+        if (mapping.invoiceNo && !invNo) return null; 
+        if (!invNo) invNo = `Row-${idx + 1}`;
+
+        const igst = mapping.igst ? parseNumericString(r[mapping.igst]) : 0;
+        const cgst = mapping.cgst ? parseNumericString(r[mapping.cgst]) : 0;
+        const sgst = mapping.sgst ? parseNumericString(r[mapping.sgst]) : 0;
+        const totalGstInCol = mapping.totalGst ? parseNumericString(r[mapping.totalGst]) : 0;
+
+        const supplierName = mapping.supplierName && r[mapping.supplierName] ? String(r[mapping.supplierName]).trim() : null;
+
+        const normInValue = normalizeInvoiceNo(invNo);
+        const normNameValue = normalizePartyName(supplierName);
+        const nameWordTokens = new Set(normNameValue ? normNameValue.split(' ').filter(word => word.length > 1) : []);
+
+        return {
+          supplierName,
+          gstin: mapping.gstin && r[mapping.gstin] ? String(r[mapping.gstin]).trim() : null,
+          invoiceNo: invNo,
+          invoiceDate: mapping.invoiceDate && r[mapping.invoiceDate] ? parseNumericExcelDate(r[mapping.invoiceDate]) : null,
+          taxableValue: mapping.taxableValue ? parseNumericString(r[mapping.taxableValue]) : 0,
+          igst,
+          cgst,
+          sgst,
+          totalGst: totalGstInCol > 0 ? totalGstInCol : igst + cgst + sgst,
+          _normInv: normInValue,
+          _normName: normNameValue,
+          _nameWords: nameWordTokens
+        };
+      }).filter(Boolean);
+    }
+
+    // Reconcile processing dispatcher
+    async function startMatchingProcess() {
+      document.getElementById('run-reconcile-btn').disabled = true;
+      document.getElementById('prog-wrap').classList.remove('hidden');
+
+      setEngineProgress(10, "Mapping Excel row boundaries...");
+      await new Promise(r => setTimeout(r, 100));
+
+      const books = extractStructuredRows(state.books.rawRows, state.books.mapping);
+      const gstr2b = extractStructuredRows(state.gstr2b.rawRows, state.gstr2b.mapping);
+
+      setEngineProgress(35, "Running multi-tier fallback alignment algorithms...");
+      await new Promise(r => setTimeout(r, 100));
+
+      const matchingMode = document.getElementById('matching-mode').value;
+      const matched = [];
+      const amountDiffers = [];
+      const usedB = new Set();
+      const usedG = new Set();
+
+      let tiersSelected = [];
+      if (matchingMode === 'auto') {
+        tiersSelected = [1, 2, 3, 4, 5];
+      } else if (matchingMode === 'tier1') {
+        tiersSelected = [1];
+      } else if (matchingMode === 'tier2') {
+        tiersSelected = [2];
+      } else if (matchingMode === 'tier3') {
+        tiersSelected = [3];
+      } else if (matchingMode === 'tier4') {
+        tiersSelected = [4];
+      } else {
+        tiersSelected = [5];
+      }
+
+      let runs = 0;
+      const scopeLength = tiersSelected.length * books.length;
+
+      for (const tier of tiersSelected) {
+        for (let b = 0; b < books.length; b++) {
+          if (usedB.has(b)) continue;
+          const bRow = books[b];
+
+          runs++;
+          if (runs % 200 === 0) {
+            const calculatedPercent = Math.floor((runs / scopeLength) * 50);
+            setEngineProgress(35 + calculatedPercent, `Comparing fallbacks (Pass ${tier})...`);
+            await new Promise(r => setTimeout(r, 1));
+          }
+
+          let bestGIndex = -1;
+          let bestSimValue = -1;
+          let bestTaxMatch = false;
+
+          for (let g = 0; g < gstr2b.length; g++) {
+            if (usedG.has(g)) continue;
+            const gRow = gstr2b[g];
+
+            const approxTaxValueOk = Math.abs(bRow.taxableValue - gRow.taxableValue) <= 1.50;
+
+            let nameOk = false;
+            let simCoeff = 0;
+            if (bRow._normName && gRow._normName) {
+              if (bRow._normName === gRow._normName) {
+                simCoeff = 1.0;
+                nameOk = true;
+              } else {
+                simCoeff = assessNameSimilarity(bRow._nameWords, gRow._nameWords);
+                nameOk = simCoeff >= 0.45;
+              }
+            }
+
+            const datesOk = !!(bRow.invoiceDate && gRow.invoiceDate && bRow.invoiceDate === gRow.invoiceDate);
+            
+            const isDummyB = bRow.invoiceNo.startsWith('Row-');
+            const isDummyG = gRow.invoiceNo.startsWith('Row-');
+            const invNoOk = (!isDummyB && !isDummyG && testInvoiceSlidings(bRow._normInv, gRow._normInv));
+
+            let holdsMatch = false;
+            if (tier === 1 && approxTaxValueOk && nameOk && datesOk) holdsMatch = true;
+            else if (tier === 2 && approxTaxValueOk && nameOk) holdsMatch = true;
+            else if (tier === 3 && approxTaxValueOk && datesOk) holdsMatch = true;
+            else if (tier === 4 && invNoOk && approxTaxValueOk) holdsMatch = true;
+            else if (tier === 5 && invNoOk) holdsMatch = true;
+
+            if (holdsMatch) {
+              if (simCoeff >= bestSimValue) {
+                bestSimValue = simCoeff;
+                bestGIndex = g;
+                bestTaxMatch = approxTaxValueOk;
+              }
+            }
+          }
+
+          if (bestGIndex !== -1) {
+            usedB.add(b);
+            usedG.add(bestGIndex);
+            
+            const gRow = gstr2b[bestGIndex];
+            const approxGstOk = Math.abs(bRow.totalGst - gRow.totalGst) <= 1.50;
+
+            if (bestTaxMatch && approxGstOk) {
+              matched.push({ books: bRow, gstr2b: gRow, nameSim: bestSimValue, tier });
+            } else {
+              amountDiffers.push({
+                books: bRow,
+                gstr2b: gRow,
+                nameSim: bestSimValue,
+                tier,
+                taxDiff: gRow.taxableValue - bRow.taxableValue,
+                gstDiff: gRow.totalGst - bRow.totalGst
+              });
+            }
+          }
+        }
+      }
+
+      const notIn2B = [];
+      const notInBooks = [];
+
+      for (let b = 0; b < books.length; b++) {
+        if (!usedB.has(b)) notIn2B.push(books[b]);
+      }
+
+      for (let g = 0; g < gstr2b.length; g++) {
+        if (!usedG.has(g)) notInBooks.push(gstr2b[g]);
+      }
+
+      state.results = { matched, amountDiffers, notIn2B, notInBooks };
+
+      setEngineProgress(85, "Evaluating analytical sheets...");
+      await new Promise(r => setTimeout(r, 100));
+
+      calculateWorkingPaperSummary(books, gstr2b, state.results);
+
+      setEngineProgress(100, "Done!");
+      await new Promise(r => setTimeout(r, 150));
+
+      document.getElementById('prog-wrap').classList.add('hidden');
+      document.getElementById('run-reconcile-btn').disabled = false;
+      document.getElementById('runtime-controls').classList.remove('hidden');
+
+      renderVisualizationDashboard();
+    }
+
+    function setEngineProgress(pct, label) {
+      document.getElementById('prog-fill').style.width = pct + '%';
+      document.getElementById('prog-pct').textContent = pct + '%';
+      document.getElementById('prog-lbl').textContent = label;
+    }
+
+    function calculateWorkingPaperSummary(books, gstr2b, results) {
+      const sum = list => ({
+        tv: list.reduce((a, x) => a + x.taxableValue, 0),
+        ig: list.reduce((a, x) => a + x.igst, 0),
+        cg: list.reduce((a, x) => a + x.cgst, 0),
+        sg: list.reduce((a, x) => a + x.sgst, 0)
+      });
+
+      const bt = sum(books);
+      const gt = sum(gstr2b);
+      const nib = sum(results.notInBooks);
+      const ni2b = sum(results.notIn2B);
+
+      const adBooks = sum(results.amountDiffers.map(r => r.books));
+      const ad2B = sum(results.amountDiffers.map(r => r.gstr2b));
+      
+      const adj = {
+        tv: ad2B.tv - adBooks.tv,
+        ig: ad2B.ig - adBooks.ig,
+        cg: ad2B.cg - adBooks.cg,
+        sg: ad2B.sg - adBooks.sg
+      };
+
+      const calc = {
+        tv: bt.tv + nib.tv + adj.tv - ni2b.tv,
+        ig: bt.ig + nib.ig + adj.ig - ni2b.ig,
+        cg: bt.cg + nib.cg + adj.cg - ni2b.cg,
+        sg: bt.sg + nib.sg + adj.sg - ni2b.sg
+      };
+
+      const diff = {
+        tv: calc.tv - gt.tv,
+        ig: calc.ig - gt.ig,
+        cg: calc.cg - gt.cg,
+        sg: calc.sg - gt.sg
+      };
+
+      state.summary = [
+        { label: "Input invoices as per accounts (Books)", ...bt },
+        { label: "Input invoices in 2B not in accounts (Missing in Books)", ...nib },
+        { label: "Amount Difference in Accounts (GSTR-2B higher)", ...adj },
+        { label: "Input invoices in accounts not in 2B (Missing in 2B)", ...ni2b },
+        { label: "Input invoices as per calculation (Reconciled)", ...calc },
+        { label: "Input invoices as per 2B (Actual Portal Total)", ...gt },
+        { label: "Difference (Calculated vs GSTR-2B)", ...diff }
+      ];
+    }
+
+    // Dashboard Visualization rendering
+    function renderVisualizationDashboard() {
+      document.getElementById('app-landing-instructions').classList.add('hidden');
+      document.getElementById('dashboard-metrics-container').classList.remove('hidden');
+
+      const results = state.results;
+      const totalBooksCount = state.books.rawRows.length;
+      const total2bCount = state.gstr2b.rawRows.length;
+
+      const totalMatchedITC = results.matched.reduce((acc, m) => acc + m.books.totalGst, 0);
+      const totalBooksValue = state.books.rawRows.reduce((a, r) => a + parseNumericString(r[state.books.mapping.taxableValue]), 0);
+      const totalPortalValue = state.gstr2b.rawRows.reduce((a, r) => a + parseNumericString(r[state.gstr2b.mapping.taxableValue]), 0);
+
+      // Populate Metric grid Cards
+      const parentGrid = document.getElementById('stat-grid-row');
+      const cards = [
+        { label: "Invoices in Books", val: totalBooksCount, text: formatShortK(totalBooksValue) + " taxable", emoji: "📚", bg: "bg-blue-50 border-blue-200" },
+        { label: "Invoices in 2B", val: total2bCount, text: formatShortK(totalPortalValue) + " taxable", emoji: "📋", bg: "bg-purple-50 border-purple-200" },
+        { label: "Fully Matched Invoices", val: results.matched.length, text: (totalBooksCount > 0 ? ((results.matched.length / totalBooksCount) * 100).toFixed(1) : 0) + "% match rate", emoji: "✅", bg: "bg-emerald-50 border-emerald-200 text-emerald-800" },
+        { label: "Matched Eligible ITC", val: formatShortK(totalMatchedITC), text: "Claimable immediately", emoji: "💎", bg: "bg-indigo-50 border-indigo-200" }
+      ];
+
+      parentGrid.innerHTML = cards.map(c => `
+        <div class="bg-white border rounded-xl p-4 flex items-start gap-3 shadow-sm ${c.bg}">
+          <span class="p-2 rounded bg-white text-base shadow-sm shrink-0">${c.emoji}</span>
+          <div>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">${c.label}</p>
+            <p class="text-lg font-black text-slate-900 mt-0.5">${c.val}</p>
+            <p class="text-[10px] text-slate-500 font-semibold mt-0.5">${c.text}</p>
+          </div>
+        </div>
+      `).join('');
+
+      // Populate filter selection
+      const vendorDrop = document.getElementById('recon-vendor-filter');
+      const uniqueNames = new Set();
+      results.matched.forEach(item => { if (item.books.supplierName) uniqueNames.add(item.books.supplierName); });
+      results.amountDiffers.forEach(item => { if (item.books.supplierName) uniqueNames.add(item.books.supplierName); });
+      results.notIn2B.forEach(item => { if (item.supplierName) uniqueNames.add(item.supplierName); });
+      results.notInBooks.forEach(item => { if (item.supplierName) uniqueNames.add(item.supplierName); });
+
+      vendorDrop.innerHTML = '<option value="">-- All Suppliers --</option>' + 
+        Array.from(uniqueNames).sort().map(name => `<option value="${escapeString(name)}">${escapeString(name)}</option>`).join('');
+
+      // Charting implementations
+      state.chartInstances.forEach(c => c.destroy());
+      state.chartInstances = [];
+
+      // Donut Chart
+      const statusCtx = document.getElementById('status-donut-canvas').getContext('2d');
+      const donutChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Fully Matched', 'Amount Differs', 'Missing in 2B', 'Missing in Books'],
+          datasets: [{
+            data: [results.matched.length, results.amountDiffers.length, results.notIn2B.length, results.notInBooks.length],
+            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#f97316'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' } } }
+          },
+          cutout: '60%'
+        }
+      });
+
+      // Group totals comparisons Chart
+      const barCtx = document.getElementById('val-bar-canvas').getContext('2d');
+      const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['IGST', 'CGST', 'SGST'],
+          datasets: [
+            {
+              label: 'Books',
+              data: [state.summary[0].ig, state.summary[0].cg, state.summary[0].sg],
+              backgroundColor: '#3b82f6',
+              borderRadius: 4
+            },
+            {
+              label: 'Portal (2B)',
+              data: [state.summary[5].ig, state.summary[5].cg, state.summary[5].sg],
+              backgroundColor: '#10b981',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' } } }
+          },
+          scales: {
+            y: { ticks: { callback: value => formatShortK(value) } }
+          }
+        }
+      });
+
+      state.chartInstances.push(donutChart, barChart);
+
+      // Tab counters indices
+      document.getElementById('lbl-c-matched').textContent = results.matched.length;
+      document.getElementById('lbl-c-amtdiff').textContent = results.amountDiffers.length;
+      document.getElementById('lbl-c-ni2b').textContent = results.notIn2B.length;
+      document.getElementById('lbl-c-nib').textContent = results.notInBooks.length;
+
+      applyFilters();
+    }
+
+    function switchTab(tabId, el) {
+      state.activeTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      
+      const paneMap = {
+        matched: 'tab-viewport-matched',
+        amtdiff: 'tab-viewport-amtdiff',
+        notIn2B: 'tab-viewport-notIn2B',
+        notInBooks: 'tab-viewport-notInBooks',
+        recosheet: 'tab-viewport-recosheet'
+      };
+
+      document.getElementById(paneMap[tabId]).classList.remove('hidden');
+
+      if (tabId === 'recosheet') {
+        document.getElementById('table-search-panel').classList.add('hidden');
+      } else {
+        document.getElementById('table-search-panel').classList.remove('hidden');
+      }
+    }
+
+    function applyFilters() {
+      const results = state.results;
+      if (!results) return;
+
+      const q = document.getElementById('recon-search-box').value.toLowerCase();
+      const vendorName = document.getElementById('recon-vendor-filter').value;
+
+      // Filter matched items
+      const matchedFiltered = results.matched.filter(item => {
+        const matchesQuery = String(item.books.supplierName || '').toLowerCase().includes(q) ||
+                           String(item.books.invoiceNo || '').toLowerCase().includes(q) ||
+                           String(item.books.gstin || '').toLowerCase().includes(q);
+        const matchesVendor = !vendorName || item.books.supplierName === vendorName;
+        return matchesQuery && matchesVendor;
+      });
+
+      // Filter amount differs items
+      const amtFiltered = results.amountDiffers.filter(item => {
+        const matchesQuery = String(item.books.supplierName || '').toLowerCase().includes(q) ||
+                           String(item.books.invoiceNo || '').toLowerCase().includes(q) ||
+                           String(item.books.gstin || '').toLowerCase().includes(q);
+        const matchesVendor = !vendorName || item.books.supplierName === vendorName;
+        return matchesQuery && matchesVendor;
+      });
+
+      // Filter not in 2b items
+      const ni2bFiltered = results.notIn2B.filter(item => {
+        const matchesQuery = String(item.supplierName || '').toLowerCase().includes(q) ||
+                           String(item.invoiceNo || '').toLowerCase().includes(q) ||
+                           String(item.gstin || '').toLowerCase().includes(q);
+        const matchesVendor = !vendorName || item.supplierName === vendorName;
+        return matchesQuery && matchesVendor;
+      });
+
+      // Filter not in books items
+      const nibFiltered = results.notInBooks.filter(item => {
+        const matchesQuery = String(item.supplierName || '').toLowerCase().includes(q) ||
+                           String(item.invoiceNo || '').toLowerCase().includes(q) ||
+                           String(item.gstin || '').toLowerCase().includes(q);
+        const matchesVendor = !vendorName || item.supplierName === vendorName;
+        return matchesQuery && matchesVendor;
+      });
+
+      renderMatchedViewport(matchedFiltered);
+      renderAmtDiffViewport(amtFiltered);
+      renderSimpleViewport('notIn2B', ni2bFiltered, 'Books Only (No matching entry inside GSTR-2B table)');
+      renderSimpleViewport('notInBooks', nibFiltered, 'GSTR-2B Only (No matching entry loaded in ledger accounts)');
+      renderCalculatorsViewport();
+    }
+
+    function parseMatchTag(tier) {
+      switch(tier) {
+        case 1: return '<span class="match-badge tier-1" title="Tier 1 Exact Match: Taxable + Party Name + Date">✓ Tax+Name+Date</span>';
+        case 2: return '<span class="match-badge tier-3" title="Tier 2 Similar Match: Taxable + Party Name">✓ Tax+Name</span>';
+        case 3: return '<span class="match-badge tier-3" title="Tier 3 Flexible Match: Taxable + Date Match">✓ Tax+Date</span>';
+        case 4: return '<span class="match-badge tier-4" title="Tier 4 Invoice Match: Invoice Identifier + Taxable value">✓ Invoice No</span>';
+        default: return '<span class="match-badge tier-5" title="Tier 5 Invoice fallback match coordinate">✓ Invoice</span>';
+      }
+    }
+
+    function renderMatchedViewport(list) {
+      const container = document.getElementById('tab-viewport-matched');
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No matching records found.</p>';
+        return;
+      }
+
+      const rows = list.map(m => `
+        <tr>
+          <td class="max-w-[170px] truncate font-semibold" title="${escapeString(m.books.supplierName)}">${escapeString(m.books.supplierName || '—')}</td>
+          <td class="font-mono text-xs text-slate-600">${escapeString(m.books.gstin || '—')}</td>
+          <td class="font-bold text-slate-800 flex items-center gap-1">${escapeString(m.books.invoiceNo)} ${parseMatchTag(m.tier)}</td>
+          <td class="text-right tabular-nums text-slate-705 font-medium">${formatIndianCurrency(m.books.taxableValue)}</td>
+          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(m.books.totalGst)}</td>
+          <td class="border-l border-slate-300 max-w-[170px] truncate" title="${escapeString(m.gstr2b.supplierName)}">${escapeString(m.gstr2b.supplierName || '—')}</td>
+          <td class="font-mono text-xs text-slate-600">${escapeString(m.gstr2b.gstin || '—')}</td>
+          <td class="font-bold text-blue-600">${escapeString(m.gstr2b.invoiceNo)}</td>
+          <td class="text-right tabular-nums text-slate-705 font-medium">${formatIndianCurrency(m.gstr2b.taxableValue)}</td>
+          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(m.gstr2b.totalGst)}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+          <table>
+            <thead>
+              <tr>
+                <th colspan="5" class="bg-blue-50 text-blue-800 border-b border-blue-250 text-center font-extrabold text-xs">📖 PURCHASE LEDGER (BOOKS OF ACCOUNT)</th>
+                <th colspan="5" class="bg-emerald-50 text-emerald-800 border-b border-emerald-250 border-l border-slate-300 text-center font-extrabold text-xs">🧾 GSTR-2B AUTO STATEMENT</th>
+              </tr>
+              <tr>
+                <th>Party Name</th>
+                <th>Supplier GSTIN</th>
+                <th>Invoice</th>
+                <th class="text-right">Taxable</th>
+                <th class="text-right">Total GST</th>
+                <th class="border-l border-slate-300">Party Name (2B)</th>
+                <th>GSTIN (2B)</th>
+                <th>Invoice (2B)</th>
+                <th class="text-right">Taxable (2B)</th>
+                <th class="text-right">Total GST (2B)</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderAmtDiffViewport(list) {
+      const container = document.getElementById('tab-viewport-amtdiff');
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No amount-variance records found.</p>';
+        return;
+      }
+
+      const rows = list.map(m => `
+        <tr>
+          <td class="max-w-[160px] truncate font-semibold">${escapeString(m.books.supplierName || '—')}</td>
+          <td class="font-bold text-slate-800">${escapeString(m.books.invoiceNo)} ${parseMatchTag(m.tier)}</td>
+          <td class="text-right tabular-nums text-slate-600 font-medium">${formatIndianCurrency(m.books.taxableValue)}</td>
+          <td class="text-right tabular-nums text-slate-700 font-bold">${formatIndianCurrency(m.books.totalGst)}</td>
+          <td class="border-l border-slate-300 font-bold text-blue-600">${escapeString(m.gstr2b.invoiceNo)}</td>
+          <td class="text-right tabular-nums text-slate-600 font-medium">${formatIndianCurrency(m.gstr2b.taxableValue)}</td>
+          <td class="text-right tabular-nums text-slate-700 font-bold">${formatIndianCurrency(m.gstr2b.totalGst)}</td>
+          <td class="border-l border-slate-300 text-right font-black tabular-nums ${m.taxDiff >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${m.taxDiff >= 0 ? '+' : ''}${formatIndianCurrency(m.taxDiff)}</td>
+          <td class="text-right font-black tabular-nums ${m.gstDiff >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${m.gstDiff >= 0 ? '+' : ''}${formatIndianCurrency(m.gstDiff)}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+          <table>
+            <thead>
+              <tr>
+                <th colspan="4" class="bg-blue-50 text-blue-800 border-b border-blue-200 text-center font-bold">📖 BOOKS OF ACCOUNT</th>
+                <th colspan="3" class="bg-emerald-50 text-emerald-800 border-b border-emerald-200 border-l border-slate-300 text-center font-bold">🧾 PORTAL DETAILS</th>
+                <th colspan="2" class="bg-amber-50 text-amber-800 border-b border-amber-200 border-l border-slate-300 text-center font-bold">📊 VARIANCE GAP</th>
+              </tr>
+              <tr>
+                <th>Party Name</th>
+                <th>Invoice</th>
+                <th class="text-right">Taxable</th>
+                <th class="text-right">GST</th>
+                <th class="border-l border-slate-300">Invoice (2B)</th>
+                <th class="text-right">Taxable (2B)</th>
+                <th class="text-right">GST (2B)</th>
+                <th class="border-l border-slate-300 text-right">Taxable Diff</th>
+                <th class="text-right">GST Diff</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderSimpleViewport(type, list, subtitle) {
+      const container = document.getElementById(`tab-viewport-${type}`);
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No records in this classification.</p>';
+        return;
+      }
+
+      const rows = list.map(item => `
+        <tr>
+          <td class="font-semibold">${escapeString(item.supplierName || '—')}</td>
+          <td class="font-mono text-xs text-slate-600">${escapeString(item.gstin || '—')}</td>
+          <td class="font-bold text-slate-800">${escapeString(item.invoiceNo)}</td>
+          <td>${escapeString(item.invoiceDate || '—')}</td>
+          <td class="text-right tabular-nums text-slate-700 font-medium">${formatIndianCurrency(item.taxableValue)}</td>
+          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.igst)}</td>
+          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.cgst)}</td>
+          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.sgst)}</td>
+          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(item.totalGst)}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="space-y-2">
+          <p class="text-[11px] uppercase font-black text-slate-400 tracking-wider flex items-center gap-1.5">ℹ ${subtitle}</p>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+            <table>
+              <thead>
+                <tr>
+                  <th>Supplier Name</th>
+                  <th>GSTIN</th>
+                  <th>Invoice No</th>
+                  <th>Invoice Date</th>
+                  <th class="text-right">Taxable Value</th>
+                  <th class="text-right">IGST</th>
+                  <th class="text-right">CGST</th>
+                  <th class="text-right">SGST</th>
+                  <th class="text-right">Total GST</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCalculatorsViewport() {
+      const container = document.getElementById('tab-viewport-recosheet');
+      const sum = state.summary;
+      if (sum.length === 0) return;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">CA Working Paper Reconciliation Worksheet</h3>
+            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Dynamic formulas mock calculations linking totals</p>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+            <table>
+              <thead>
+                <tr>
+                  <th>Particulars Description</th>
+                  <th class="text-right">Taxable Value</th>
+                  <th class="text-right">IGST</th>
+                  <th class="text-right">CGST</th>
+                  <th class="text-right">SGST / UTGST</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="summary-section">
+                  <td>${escapeString(sum[0].label)}</td>
+                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].tv)}</td>
+                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].ig)}</td>
+                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].cg)}</td>
+                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].sg)}</td>
+                </tr>
+                <tr class="bg-slate-50/20"><td colspan="5" class="py-1 px-4 text-[10px] text-slate-400 font-black tracking-widest">ADDITIONS:</td></tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="pl-6 text-slate-700 font-semibold">• Invoices in GSTR-2B not in accounts (Missing in Books)</td>
+                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[1].tv)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].ig)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].cg)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].sg)}</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="pl-6 text-slate-700 font-semibold">• Amount difference variance (Portal shows higher cost)</td>
+                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[2].tv)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].ig)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].cg)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].sg)}</td>
+                </tr>
+                <tr class="bg-slate-50/20"><td colspan="5" class="py-1 px-4 text-[10px] text-slate-400 font-black tracking-widest">SUBTRACTIONS:</td></tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="pl-6 text-slate-700 font-semibold">• Invoices in accounts not in GSTR-2B (Missing in 2B)</td>
+                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[3].tv)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].ig)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].cg)}</td>
+                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].sg)}</td>
+                </tr>
+                <tr class="summary-total">
+                  <td class="text-blue-900 font-black">Reconciled Calculated Input Tax Credit (A)</td>
+                  <td class="text-right tabular-nums text-[12px] font-black">${formatIndianCurrency(sum[4].tv)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].ig)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].cg)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].sg)}</td>
+                </tr>
+                <tr class="summary-section">
+                  <td class="text-emerald-900 font-black">GSTR-2B Portal input tax total values (B)</td>
+                  <td class="text-right tabular-nums text-[12px] font-black">${formatIndianCurrency(sum[5].tv)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].ig)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].cg)}</td>
+                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].sg)}</td>
+                </tr>
+                <tr class="summary-diff">
+                  <td class="font-black text-amber-950">Variance Gap Out-of-Balance (A - B)</td>
+                  <td class="text-right tabular-nums text-[12px] font-black ${sum[6].tv !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].tv)}</td>
+                  <td class="text-right tabular-nums font-bold ${sum[6].ig !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].ig)}</td>
+                  <td class="text-right tabular-nums font-bold ${sum[6].cg !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].cg)}</td>
+                  <td class="text-right tabular-nums font-bold ${sum[6].sg !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].sg)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // SheetJS Workbook Generation Offline
+    function exportReconciliationReport() {
+      if (!state.results) return;
+
+      const wb = XLSX.utils.book_new();
+      const res = state.results;
+
+      // Tab helper auto column widths
+      const colsW = [{ wch: 23 }, { wch: 17 }, { wch: 19 }, { wch: 14 }, { wch: 14 }];
+
+      // Fully matched Sheet
+      const mHeaders = ['Supplier Name (Books)', 'GSTIN (Books)', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Supplier Name (2B)', 'GSTIN (2B)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)'];
+      const mData = res.matched.map(m => [
+        m.books.supplierName || '', m.books.gstin || '', m.books.invoiceNo, m.books.taxableValue, m.books.totalGst,
+        m.gstr2b.supplierName || '', m.gstr2b.gstin || '', m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.totalGst
+      ]);
+      const wsMatched = XLSX.utils.aoa_to_sheet([mHeaders, ...mData]);
+      XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
+
+      // Amount Differs Sheet
+      const adHeaders = ['Supplier', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)', 'Taxable Diff', 'GST Diff'];
+      const adData = res.amountDiffers.map(d => [
+        d.books.supplierName || '', d.books.invoiceNo, d.books.taxableValue, d.books.totalGst,
+        d.gstr2b.invoiceNo, d.gstr2b.taxableValue, d.gstr2b.totalGst, d.taxDiff, d.gstDiff
+      ]);
+      const wsAd = XLSX.utils.aoa_to_sheet([adHeaders, ...adData]);
+      XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
+
+      // Books Only
+      const bOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
+      const bOnlyData = res.notIn2B.map(b => [b.supplierName || '', b.gstin || '', b.invoiceNo, b.invoiceDate || '', b.taxableValue, b.totalGst]);
+      const wsBOnly = XLSX.utils.aoa_to_sheet([bOnlyHeaders, ...bOnlyData]);
+      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Books Only (No 2B)');
+
+      // GSTR-2B Only
+      const gOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
+      const gOnlyData = res.notInBooks.map(g => [g.supplierName || '', g.gstin || '', g.invoiceNo, g.invoiceDate || '', g.taxableValue, g.totalGst]);
+      const wsGOnly = XLSX.utils.aoa_to_sheet([gOnlyHeaders, ...gOnlyData]);
+      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Portal Only (No Books)');
+
+      // Working Summary Sheet with live matching formulas
+      const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
+      const summaryRows = state.summary.map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
+      const wsSummary = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
+      
+      // Let's configure custom formulas to make it extremely premium
+      const N_m = res.matched.length;
+      const N_d = res.amountDiffers.length;
+      wsSummary['B2'] = { t: 'n', f: `=SUM(Matched!D2:Matched!D${N_m+1})` };
+      wsSummary['E2'] = { t: 'n', f: `=SUM(Matched!J2:Matched!J${N_m+1})` };
+
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary Paper');
+
+      XLSX.writeFile(wb, `GST_Offline_Reconciled_Report_AJ_v1.0.xlsx`);
+    }
+
+    function restartWorkspace() {
+      state.books = { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null };
+      state.gstr2b = { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null };
+      state.results = null;
+      state.summary = [];
+
+      document.getElementById('books-start-row').value = "1";
+      document.getElementById('gstr2b-start-row').value = "1";
+
+      resetTrackerUI('books');
+      resetTrackerUI('gstr2b');
+      document.getElementById('runtime-controls').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
