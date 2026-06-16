@@ -1628,73 +1628,152 @@
         ws['!rows'] = rowHeights;
       };
 
+      // Helper function to create Excel formulas safely
+      const createSubtotalCell = (columnLetter, startRow, endRow) => {
+        return { t: 'n', f: `=SUM(${columnLetter}${startRow}:${columnLetter}${endRow})` };
+      };
+
       // 1. Fully matched Sheet
-      const mH1 = ['BOOKS', '', '', '', '', 'GSTR-2B', '', '', '', ''];
-      const mHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Taxable Value', 'Total GST', 'Supplier Name', 'GSTIN', 'Invoice No', 'Taxable Value', 'Total GST'];
+      const mH1 = [
+        'BOOKS', '', '', '', '', '', '', '', '',
+        'GSTR-2B', '', '', '', '', '', '', '', ''
+      ];
+      const mHeaders = [
+        'Supplier Name', 'GSTIN of Supplier', 'Invoice Number', 'Invoice Date', 'Taxable Value', 'IGST Amount', 'CGST Amount', 'SGST / UTGST Amount', 'Total GST Amount',
+        'Supplier Name', 'GSTIN of Supplier', 'Invoice Number', 'Invoice Date', 'Taxable Value', 'IGST Amount', 'CGST Amount', 'SGST / UTGST Amount', 'Total GST Amount'
+      ];
       const mData = res.matched.map(m => [
-        m.books.supplierName || '', m.books.gstin || '', m.books.invoiceNo, m.books.taxableValue, m.books.totalGst,
-        m.gstr2b.supplierName || '', m.gstr2b.gstin || '', m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.totalGst
+        m.books.supplierName || '', m.books.gstin || '', m.books.invoiceNo, m.books.invoiceDate || '', m.books.taxableValue, m.books.igst || 0, m.books.cgst || 0, m.books.sgst || 0, m.books.totalGst || 0,
+        m.gstr2b.supplierName || '', m.gstr2b.gstin || '', m.gstr2b.invoiceNo, m.gstr2b.invoiceDate || '', m.gstr2b.taxableValue, m.gstr2b.igst || 0, m.gstr2b.cgst || 0, m.gstr2b.sgst || 0, m.gstr2b.totalGst || 0
       ]);
       const wsMatched = XLSX.utils.aoa_to_sheet([mH1, mHeaders, ...mData]);
-      wsMatched['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 9 } }];
+      wsMatched['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+        { s: { r: 0, c: 9 }, e: { r: 0, c: 17 } }
+      ];
 
       // Add Totals
       const mTotalRowIdx = N_m + 3;
-      wsMatched['A' + mTotalRowIdx] = { t: 's', v: 'TOTAL' };
-      wsMatched['D' + mTotalRowIdx] = { t: 'n', f: `=SUM(D3:D${N_m+2})` };
-      wsMatched['E' + mTotalRowIdx] = { t: 'n', f: `=SUM(E3:E${N_m+2})` };
-      wsMatched['I' + mTotalRowIdx] = { t: 'n', f: `=SUM(I3:I${N_m+2})` };
-      wsMatched['J' + mTotalRowIdx] = { t: 'n', f: `=SUM(J3:J${N_m+2})` };
-      wsMatched['!ref'] = `A1:J${mTotalRowIdx}`;
+      if (N_m > 0) {
+        wsMatched['A' + mTotalRowIdx] = { t: 's', v: 'TOTAL' };
+        wsMatched[`E${mTotalRowIdx}`] = createSubtotalCell('E', 3, N_m + 2);
+        wsMatched[`F${mTotalRowIdx}`] = createSubtotalCell('F', 3, N_m + 2);
+        wsMatched[`G${mTotalRowIdx}`] = createSubtotalCell('G', 3, N_m + 2);
+        wsMatched[`H${mTotalRowIdx}`] = createSubtotalCell('H', 3, N_m + 2);
+        wsMatched[`I${mTotalRowIdx}`] = createSubtotalCell('I', 3, N_m + 2);
+
+        wsMatched[`N${mTotalRowIdx}`] = createSubtotalCell('N', 3, N_m + 2);
+        wsMatched[`O${mTotalRowIdx}`] = createSubtotalCell('O', 3, N_m + 2);
+        wsMatched[`P${mTotalRowIdx}`] = createSubtotalCell('P', 3, N_m + 2);
+        wsMatched[`Q${mTotalRowIdx}`] = createSubtotalCell('Q', 3, N_m + 2);
+        wsMatched[`R${mTotalRowIdx}`] = createSubtotalCell('R', 3, N_m + 2);
+
+        wsMatched['!ref'] = `A1:R${mTotalRowIdx}`;
+      } else {
+        wsMatched['A3'] = { t: 's', v: 'TOTAL' };
+        ['E','F','G','H','I','N','O','P','Q','R'].forEach(col => {
+          wsMatched[`${col}3`] = { t: 'n', v: 0 };
+        });
+        wsMatched['!ref'] = `A1:R3`;
+      }
 
       applyStylesToSheet(wsMatched, 2, false);
 
       // 2. Amount Variance Sheet
-      const adHeaders = ['Supplier', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)', 'Taxable Diff', 'GST Diff'];
-      const adData = res.amountDiffers.map(d => [
-        d.books.supplierName || '', d.books.invoiceNo, d.books.taxableValue, d.books.totalGst,
-        d.gstr2b.invoiceNo, d.gstr2b.taxableValue, d.gstr2b.totalGst, d.taxDiff, d.gstDiff
+      const adHeaders = [
+        'Supplier (Books)', 'Invoice No', 'Taxable (Books)', 'IGST (Books)', 'CGST (Books)', 'SGST (Books)', 'GST (Books)',
+        'Supplier (2B)', 'Invoice No (2B)', 'Taxable (2B)', 'IGST (2B)', 'CGST (2B)', 'SGST (2B)', 'GST (2B)',
+        'Taxable Diff', 'GST Diff'
+      ];
+      const adData = res.amountDiffers.map(m => [
+        m.books.supplierName || '', m.books.invoiceNo, m.books.taxableValue, m.books.igst || 0, m.books.cgst || 0, m.books.sgst || 0, m.books.totalGst || 0,
+        m.gstr2b.supplierName || '', m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.igst || 0, m.gstr2b.cgst || 0, m.gstr2b.sgst || 0, m.gstr2b.totalGst || 0,
+        m.taxDiff, m.gstDiff
       ]);
       const wsAd = XLSX.utils.aoa_to_sheet([adHeaders, ...adData]);
 
       // Add Totals
       const adTotalRowIdx = N_d + 2;
-      wsAd['A' + adTotalRowIdx] = { t: 's', v: 'TOTAL' };
-      wsAd['C' + adTotalRowIdx] = { t: 'n', f: `=SUM(C2:C${N_d+1})` };
-      wsAd['D' + adTotalRowIdx] = { t: 'n', f: `=SUM(D2:D${N_d+1})` };
-      wsAd['F' + adTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_d+1})` };
-      wsAd['G' + adTotalRowIdx] = { t: 'n', f: `=SUM(G2:G${N_d+1})` };
-      wsAd['H' + adTotalRowIdx] = { t: 'n', f: `=SUM(H2:H${N_d+1})` };
-      wsAd['I' + adTotalRowIdx] = { t: 'n', f: `=SUM(I2:I${N_d+1})` };
-      wsAd['!ref'] = `A1:I${adTotalRowIdx}`;
+      if (N_d > 0) {
+        wsAd['A' + adTotalRowIdx] = { t: 's', v: 'TOTAL' };
+        wsAd['C' + adTotalRowIdx] = createSubtotalCell('C', 2, N_d + 1);
+        wsAd['D' + adTotalRowIdx] = createSubtotalCell('D', 2, N_d + 1);
+        wsAd['E' + adTotalRowIdx] = createSubtotalCell('E', 2, N_d + 1);
+        wsAd['F' + adTotalRowIdx] = createSubtotalCell('F', 2, N_d + 1);
+        wsAd['G' + adTotalRowIdx] = createSubtotalCell('G', 2, N_d + 1);
+
+        wsAd['J' + adTotalRowIdx] = createSubtotalCell('J', 2, N_d + 1);
+        wsAd['K' + adTotalRowIdx] = createSubtotalCell('K', 2, N_d + 1);
+        wsAd['L' + adTotalRowIdx] = createSubtotalCell('L', 2, N_d + 1);
+        wsAd['M' + adTotalRowIdx] = createSubtotalCell('M', 2, N_d + 1);
+        wsAd['N' + adTotalRowIdx] = createSubtotalCell('N', 2, N_d + 1);
+
+        wsAd['O' + adTotalRowIdx] = createSubtotalCell('O', 2, N_d + 1);
+        wsAd['P' + adTotalRowIdx] = createSubtotalCell('P', 2, N_d + 1);
+
+        wsAd['!ref'] = `A1:P${adTotalRowIdx}`;
+      } else {
+        wsAd['A2'] = { t: 's', v: 'TOTAL' };
+        ['C','D','E','F','G','J','K','L','M','N','O','P'].forEach(col => {
+          wsAd[col + '2'] = { t: 'n', v: 0 };
+        });
+        wsAd['!ref'] = `A1:P2`;
+      }
 
       applyStylesToSheet(wsAd, 1, false);
 
       // 3. Books Only (Not in 2B)
-      const bOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
-      const bOnlyData = res.notIn2B.map(b => [b.supplierName || '', b.gstin || '', b.invoiceNo, b.invoiceDate || '', b.taxableValue, b.totalGst]);
-      const wsBOnly = XLSX.utils.aoa_to_sheet([bOnlyHeaders, ...bOnlyData]);
+      const standardHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'IGST', 'CGST', 'SGST', 'Total GST'];
+      const bOnlyData = res.notIn2B.map(b => [
+        b.supplierName || '', b.gstin || '', b.invoiceNo, b.invoiceDate || '',
+        b.taxableValue, b.igst || 0, b.cgst || 0, b.sgst || 0, b.totalGst || 0
+      ]);
+      const wsBOnly = XLSX.utils.aoa_to_sheet([standardHeaders, ...bOnlyData]);
 
       // Add Totals
       const bTotalRowIdx = N_ni2b + 2;
-      wsBOnly['A' + bTotalRowIdx] = { t: 's', v: 'TOTAL' };
-      wsBOnly['E' + bTotalRowIdx] = { t: 'n', f: `=SUM(E2:E${N_ni2b+1})` };
-      wsBOnly['F' + bTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_ni2b+1})` };
-      wsBOnly['!ref'] = `A1:F${bTotalRowIdx}`;
+      if (N_ni2b > 0) {
+        wsBOnly['A' + bTotalRowIdx] = { t: 's', v: 'TOTAL' };
+        wsBOnly['E' + bTotalRowIdx] = createSubtotalCell('E', 2, N_ni2b + 1);
+        wsBOnly['F' + bTotalRowIdx] = createSubtotalCell('F', 2, N_ni2b + 1);
+        wsBOnly['G' + bTotalRowIdx] = createSubtotalCell('G', 2, N_ni2b + 1);
+        wsBOnly['H' + bTotalRowIdx] = createSubtotalCell('H', 2, N_ni2b + 1);
+        wsBOnly['I' + bTotalRowIdx] = createSubtotalCell('I', 2, N_ni2b + 1);
+        wsBOnly['!ref'] = `A1:I${bTotalRowIdx}`;
+      } else {
+        wsBOnly['A2'] = { t: 's', v: 'TOTAL' };
+        ['E','F','G','H','I'].forEach(col => {
+          wsBOnly[col + '2'] = { t: 'n', v: 0 };
+        });
+        wsBOnly['!ref'] = `A1:I2`;
+      }
 
       applyStylesToSheet(wsBOnly, 1, false);
 
       // 4. GSTR-2B Only (Not in Books)
-      const gOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
-      const gOnlyData = res.notInBooks.map(g => [g.supplierName || '', g.gstin || '', g.invoiceNo, g.invoiceDate || '', g.taxableValue, g.totalGst]);
-      const wsGOnly = XLSX.utils.aoa_to_sheet([gOnlyHeaders, ...gOnlyData]);
+      const gOnlyData = res.notInBooks.map(g => [
+        g.supplierName || '', g.gstin || '', g.invoiceNo, g.invoiceDate || '',
+        g.taxableValue, g.igst || 0, g.cgst || 0, g.sgst || 0, g.totalGst || 0
+      ]);
+      const wsGOnly = XLSX.utils.aoa_to_sheet([standardHeaders, ...gOnlyData]);
 
       // Add Totals
       const gTotalRowIdx = N_nib + 2;
-      wsGOnly['A' + gTotalRowIdx] = { t: 's', v: 'TOTAL' };
-      wsGOnly['E' + gTotalRowIdx] = { t: 'n', f: `=SUM(E2:E${N_nib+1})` };
-      wsGOnly['F' + gTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_nib+1})` };
-      wsGOnly['!ref'] = `A1:F${gTotalRowIdx}`;
+      if (N_nib > 0) {
+        wsGOnly['A' + gTotalRowIdx] = { t: 's', v: 'TOTAL' };
+        wsGOnly['E' + gTotalRowIdx] = createSubtotalCell('E', 2, N_nib + 1);
+        wsGOnly['F' + gTotalRowIdx] = createSubtotalCell('F', 2, N_nib + 1);
+        wsGOnly['G' + gTotalRowIdx] = createSubtotalCell('G', 2, N_nib + 1);
+        wsGOnly['H' + gTotalRowIdx] = createSubtotalCell('H', 2, N_nib + 1);
+        wsGOnly['I' + gTotalRowIdx] = createSubtotalCell('I', 2, N_nib + 1);
+        wsGOnly['!ref'] = `A1:I${gTotalRowIdx}`;
+      } else {
+        wsGOnly['A2'] = { t: 's', v: 'TOTAL' };
+        ['E','F','G','H','I'].forEach(col => {
+          wsGOnly[col + '2'] = { t: 'n', v: 0 };
+        });
+        wsGOnly['!ref'] = `A1:I2`;
+      }
 
       applyStylesToSheet(wsGOnly, 1, false);
 
@@ -1709,25 +1788,25 @@
       const idx_g_tot = N_nib + 2;
 
       // Link values to Sheet totals dynamically using exact formulas
-      wsSummary['B2'] = { t: 'n', f: `='Matched'!D${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C2'] = { t: 'n', f: `=0` };
-      wsSummary['D2'] = { t: 'n', f: `=0` };
-      wsSummary['E2'] = { t: 'n', f: `=0` };
+      wsSummary['B2'] = { t: 'n', f: `='Matched'!E${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C2'] = { t: 'n', f: `='Matched'!F${idx_m_tot}+'Amount Variance'!D${idx_d_tot}+'Not in 2B(Books Only)'!F${idx_b_tot}` };
+      wsSummary['D2'] = { t: 'n', f: `='Matched'!G${idx_m_tot}+'Amount Variance'!E${idx_d_tot}+'Not in 2B(Books Only)'!G${idx_b_tot}` };
+      wsSummary['E2'] = { t: 'n', f: `='Matched'!H${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in 2B(Books Only)'!H${idx_b_tot}` };
 
       wsSummary['B3'] = { t: 'n', f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C3'] = { t: 'n', f: `=0` };
-      wsSummary['D3'] = { t: 'n', f: `=0` };
-      wsSummary['E3'] = { t: 'n', f: `=0` };
+      wsSummary['C3'] = { t: 'n', f: `='Not in Books(2B Only)'!F${idx_g_tot}` };
+      wsSummary['D3'] = { t: 'n', f: `='Not in Books(2B Only)'!G${idx_g_tot}` };
+      wsSummary['E3'] = { t: 'n', f: `='Not in Books(2B Only)'!H${idx_g_tot}` };
 
-      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!F${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
-      wsSummary['C4'] = { t: 'n', f: `=0` };
-      wsSummary['D4'] = { t: 'n', f: `=0` };
-      wsSummary['E4'] = { t: 'n', f: `=0` };
+      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!J${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
+      wsSummary['C4'] = { t: 'n', f: `='Amount Variance'!K${idx_d_tot}-'Amount Variance'!D${idx_d_tot}` };
+      wsSummary['D4'] = { t: 'n', f: `='Amount Variance'!L${idx_d_tot}-'Amount Variance'!E${idx_d_tot}` };
+      wsSummary['E4'] = { t: 'n', f: `='Amount Variance'!M${idx_d_tot}-'Amount Variance'!F${idx_d_tot}` };
 
       wsSummary['B5'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C5'] = { t: 'n', f: `=0` };
-      wsSummary['D5'] = { t: 'n', f: `=0` };
-      wsSummary['E5'] = { t: 'n', f: `=0` };
+      wsSummary['C5'] = { t: 'n', f: `='Not in 2B(Books Only)'!F${idx_b_tot}` };
+      wsSummary['D5'] = { t: 'n', f: `='Not in 2B(Books Only)'!G${idx_b_tot}` };
+      wsSummary['E5'] = { t: 'n', f: `='Not in 2B(Books Only)'!H${idx_b_tot}` };
 
       // Reconciled Calculation Column B..E (Row 6 - index 5 - B6)
       wsSummary['B6'] = { t: 'n', f: `=B2+B3+B4-B5` };
@@ -1736,10 +1815,10 @@
       wsSummary['E6'] = { t: 'n', f: `=E2+E3+E4-E5` };
 
       // Actual 2B total (Row 7 - index 6 - B7)
-      wsSummary['B7'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C7'] = { t: 'n', f: `=0` };
-      wsSummary['D7'] = { t: 'n', f: `=0` };
-      wsSummary['E7'] = { t: 'n', f: `=0` };
+      wsSummary['B7'] = { t: 'n', f: `='Matched'!N${idx_m_tot}+'Amount Variance'!J${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['C7'] = { t: 'n', f: `='Matched'!O${idx_m_tot}+'Amount Variance'!K${idx_d_tot}+'Not in Books(2B Only)'!F${idx_g_tot}` };
+      wsSummary['D7'] = { t: 'n', f: `='Matched'!P${idx_m_tot}+'Amount Variance'!L${idx_d_tot}+'Not in Books(2B Only)'!G${idx_g_tot}` };
+      wsSummary['E7'] = { t: 'n', f: `='Matched'!Q${idx_m_tot}+'Amount Variance'!M${idx_d_tot}+'Not in Books(2B Only)'!H${idx_g_tot}` };
 
       // Difference Row (Row 8 - index 7 - B8)
       wsSummary['B8'] = { t: 'n', f: `=B6-B7` };
