@@ -6,8 +6,8 @@
   <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.0 Standalone)</title>
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- sheetjs (XLSX) library -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- sheetjs (XLSX with styling support) library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <!-- Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Inter & JetBrains Mono Fonts -->
@@ -122,6 +122,70 @@
     .tier-3 { background: #fef3c7; color: #d97706; }
     .tier-4 { background: #e0e7ff; color: #4338ca; }
     .tier-5 { background: #f1f5f9; color: #475569; }
+
+    /* Fail-safe custom overrides for dark mode */
+    body.dark {
+      background: #0f172a !important;
+      color: #f1f5f9 !important;
+    }
+    body.dark .bg-white {
+      background-color: #1e293b !important;
+    }
+    body.dark .bg-slate-50,
+    body.dark .bg-slate-50\/50,
+    body.dark .bg-slate-100 {
+      background-color: #334155 !important;
+    }
+    body.dark .text-slate-900,
+    body.dark .text-slate-800 {
+      color: #f1f5f9 !important;
+    }
+    body.dark .text-slate-700,
+    body.dark .text-slate-600,
+    body.dark .text-slate-500 {
+      color: #cbd5e1 !important;
+    }
+    body.dark .border-slate-150,
+    body.dark .border-slate-200,
+    body.dark .border-slate-300 {
+      border-color: #334155 !important;
+    }
+    body.dark th, body.dark td {
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    body.dark th {
+      background: #0f172a !important;
+    }
+    body.dark tr:hover td {
+      background-color: #334155 !important;
+    }
+    body.dark .summary-section td {
+      background: #14532d !important;
+      color: #34d399 !important;
+    }
+    body.dark .summary-total td {
+      background: #0f172a !important;
+      color: #ffffff !important;
+    }
+    body.dark .summary-diff td {
+      background: #713f12 !important;
+      color: #fef08a !important;
+    }
+    body.dark select {
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+    }
+    body.dark input {
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+    }
+    body.dark .bg-indigo-50 {
+      background-color: #312e81 !important;
+    }
+    body.dark .text-indigo-900 {
+      color: #e0e7ff !important;
+    }
   </style>
 </head>
 <body class="text-slate-900 border-t-4 border-blue-600 min-h-screen flex flex-col">
@@ -193,13 +257,42 @@
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">DUAL-ENGINE PARSER &amp; INTEGRITY LEDGER</p>
         </div>
       </div>
-      <div id="runtime-controls" class="hidden flex items-center gap-2">
-        <button onclick="exportReconciliationReport()" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-md cursor-pointer">
-          📥 Download Linked Excel Workbook
-        </button>
-        <button onclick="restartWorkspace()" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition border border-slate-700 cursor-pointer">
-          ↺ Reset App
-        </button>
+      
+      <div class="flex items-center gap-4 shrink-0">
+        <!-- THEME TOGGLE (Sun/Moon Switch matches Second Image) -->
+        <div class="flex items-center gap-3 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 shadow-inner select-none shrink-0">
+          <span id="theme-label" class="text-xs font-semibold text-slate-200">Light Mode</span>
+          <button onclick="toggleTheme()" class="relative flex items-center h-[26px] w-[50px] rounded-full bg-slate-800 hover:bg-slate-700 p-0.5 cursor-pointer transition-colors duration-300">
+            <div class="absolute inset-0 flex justify-between items-center px-1.5 text-slate-500 pointer-events-none">
+              <!-- Sun SVG -->
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4" stroke="currentColor" fill="none"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor"/>
+              </svg>
+              <!-- Moon SVG -->
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" stroke="currentColor" fill="none"/>
+              </svg>
+            </div>
+            <div id="theme-knob" class="w-[20px] h-[20px] rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 z-10 translate-x-0">
+              <span id="knob-icon-parent">
+                <!-- Sun SVG inside knob -->
+                <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="4"/>
+                </svg>
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <div id="runtime-controls" class="hidden flex items-center gap-2">
+          <button onclick="exportReconciliationReport()" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-md cursor-pointer">
+            📥 Download Linked Excel Workbook
+          </button>
+          <button onclick="restartWorkspace()" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition border border-slate-700 cursor-pointer">
+            ↺ Reset App
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -1427,60 +1520,223 @@
       `;
     }
 
-    // SheetJS Workbook Generation Offline
     function exportReconciliationReport() {
       if (!state.results) return;
 
       const wb = XLSX.utils.book_new();
       const res = state.results;
 
-      // Tab helper auto column widths
-      const colsW = [{ wch: 23 }, { wch: 17 }, { wch: 19 }, { wch: 14 }, { wch: 14 }];
+      const N_m = res.matched.length;
+      const N_d = res.amountDiffers.length;
+      const N_ni2b = res.notIn2B.length;
+      const N_nib = res.notInBooks.length;
 
-      // Fully matched Sheet
-      const mHeaders = ['Supplier Name (Books)', 'GSTIN (Books)', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Supplier Name (2B)', 'GSTIN (2B)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)'];
+      // Internal layout styling helper
+      const applyStylesToSheet = (ws, headerRowsCount = 1, isSummary = false) => {
+        if (!ws || !ws['!ref']) return;
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        const colWidths = [];
+        const rowHeights = [];
+
+        for (let C = range.s.c; C <= range.e.c; C++) {
+          colWidths[C] = 11;
+        }
+
+        for (let R = range.s.r; R <= range.e.r; R++) {
+          let height = 21;
+          if (R < headerRowsCount) {
+            height = isSummary && R === 0 ? 32 : 27;
+          } else {
+            const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
+            const firstCell = ws[firstCellRef];
+            if (firstCell && String(firstCell.v).toUpperCase().includes('TOTAL')) {
+              height = 24;
+            }
+          }
+          rowHeights.push({ hpt: height });
+
+          for (let C = range.s.c; C <= range.e.c; C++) {
+            const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellRef];
+            if (cell) {
+              let valStr = '';
+              if (cell.v !== undefined && cell.v !== null) {
+                if (typeof cell.v === 'number') {
+                  cell.z = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)';
+                  valStr = cell.v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                  valStr = String(cell.v);
+                }
+              }
+
+               if (valStr.length > colWidths[C]) {
+                colWidths[C] = valStr.length;
+              }
+
+              if (R < headerRowsCount) {
+                cell.s = {
+                  fill: { fgColor: { rgb: isSummary && R === 0 ? "0F172A" : "1E293B" } },
+                  font: { bold: true, color: { rgb: "FFFFFF" }, name: "Segoe UI", sz: 12 },
+                  alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                  border: { bottom: { style: "medium", color: { rgb: "475569" } } }
+                };
+              } else {
+                const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
+                const firstCell = ws[firstCellRef];
+                const isTotalRow = firstCell && String(firstCell.v).toUpperCase().includes('TOTAL');
+
+                if (isTotalRow) {
+                  cell.s = {
+                    font: { bold: true, name: "Segoe UI", sz: 12 },
+                    fill: { fgColor: { rgb: "F1F5F9" } },
+                    border: {
+                      top: { style: "thin", color: { rgb: "94A3B8" } },
+                      bottom: { style: "double", color: { rgb: "475569" } }
+                    },
+                    alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" }
+                  };
+                } else {
+                  cell.s = {
+                    font: { name: "Segoe UI", sz: 11 },
+                    alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" },
+                    border: { bottom: { style: "thin", color: { rgb: "F1F5F9" } } }
+                  };
+                }
+              }
+            }
+          }
+        }
+
+        ws['!cols'] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 11), 50) }));
+        ws['!rows'] = rowHeights;
+      };
+
+      // 1. Fully matched Sheet
+      const mH1 = ['BOOKS', '', '', '', '', 'GSTR-2B', '', '', '', ''];
+      const mHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Taxable Value', 'Total GST', 'Supplier Name', 'GSTIN', 'Invoice No', 'Taxable Value', 'Total GST'];
       const mData = res.matched.map(m => [
         m.books.supplierName || '', m.books.gstin || '', m.books.invoiceNo, m.books.taxableValue, m.books.totalGst,
         m.gstr2b.supplierName || '', m.gstr2b.gstin || '', m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.totalGst
       ]);
-      const wsMatched = XLSX.utils.aoa_to_sheet([mHeaders, ...mData]);
+      const wsMatched = XLSX.utils.aoa_to_sheet([mH1, mHeaders, ...mData]);
+      wsMatched['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 9 } }];
+
+      // Add Totals
+      const mTotalRowIdx = N_m + 3;
+      wsMatched['A' + mTotalRowIdx] = { t: 's', v: 'TOTAL' };
+      wsMatched['D' + mTotalRowIdx] = { t: 'n', f: `=SUM(D3:D${N_m+2})` };
+      wsMatched['E' + mTotalRowIdx] = { t: 'n', f: `=SUM(E3:E${N_m+2})` };
+      wsMatched['I' + mTotalRowIdx] = { t: 'n', f: `=SUM(I3:I${N_m+2})` };
+      wsMatched['J' + mTotalRowIdx] = { t: 'n', f: `=SUM(J3:J${N_m+2})` };
+      wsMatched['!ref'] = `A1:J${mTotalRowIdx}`;
+
+      applyStylesToSheet(wsMatched, 2, false);
       XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
 
-      // Amount Differs Sheet
+      // 2. Amount Variance Sheet
       const adHeaders = ['Supplier', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)', 'Taxable Diff', 'GST Diff'];
       const adData = res.amountDiffers.map(d => [
         d.books.supplierName || '', d.books.invoiceNo, d.books.taxableValue, d.books.totalGst,
         d.gstr2b.invoiceNo, d.gstr2b.taxableValue, d.gstr2b.totalGst, d.taxDiff, d.gstDiff
       ]);
       const wsAd = XLSX.utils.aoa_to_sheet([adHeaders, ...adData]);
+
+      // Add Totals
+      const adTotalRowIdx = N_d + 2;
+      wsAd['A' + adTotalRowIdx] = { t: 's', v: 'TOTAL' };
+      wsAd['C' + adTotalRowIdx] = { t: 'n', f: `=SUM(C2:C${N_d+1})` };
+      wsAd['D' + adTotalRowIdx] = { t: 'n', f: `=SUM(D2:D${N_d+1})` };
+      wsAd['F' + adTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_d+1})` };
+      wsAd['G' + adTotalRowIdx] = { t: 'n', f: `=SUM(G2:G${N_d+1})` };
+      wsAd['H' + adTotalRowIdx] = { t: 'n', f: `=SUM(H2:H${N_d+1})` };
+      wsAd['I' + adTotalRowIdx] = { t: 'n', f: `=SUM(I2:I${N_d+1})` };
+      wsAd['!ref'] = `A1:I${adTotalRowIdx}`;
+
+      applyStylesToSheet(wsAd, 1, false);
       XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
 
-      // Books Only
+      // 3. Books Only (Not in 2B)
       const bOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
       const bOnlyData = res.notIn2B.map(b => [b.supplierName || '', b.gstin || '', b.invoiceNo, b.invoiceDate || '', b.taxableValue, b.totalGst]);
       const wsBOnly = XLSX.utils.aoa_to_sheet([bOnlyHeaders, ...bOnlyData]);
-      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Books Only (No 2B)');
 
-      // GSTR-2B Only
+      // Add Totals
+      const bTotalRowIdx = N_ni2b + 2;
+      wsBOnly['A' + bTotalRowIdx] = { t: 's', v: 'TOTAL' };
+      wsBOnly['E' + bTotalRowIdx] = { t: 'n', f: `=SUM(E2:E${N_ni2b+1})` };
+      wsBOnly['F' + bTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_ni2b+1})` };
+      wsBOnly['!ref'] = `A1:F${bTotalRowIdx}`;
+
+      applyStylesToSheet(wsBOnly, 1, false);
+      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Not in 2B(Books Only)');
+
+      // 4. GSTR-2B Only (Not in Books)
       const gOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
       const gOnlyData = res.notInBooks.map(g => [g.supplierName || '', g.gstin || '', g.invoiceNo, g.invoiceDate || '', g.taxableValue, g.totalGst]);
       const wsGOnly = XLSX.utils.aoa_to_sheet([gOnlyHeaders, ...gOnlyData]);
-      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Portal Only (No Books)');
 
-      // Working Summary Sheet with live matching formulas
+      // Add Totals
+      const gTotalRowIdx = N_nib + 2;
+      wsGOnly['A' + gTotalRowIdx] = { t: 's', v: 'TOTAL' };
+      wsGOnly['E' + gTotalRowIdx] = { t: 'n', f: `=SUM(E2:E${N_nib+1})` };
+      wsGOnly['F' + gTotalRowIdx] = { t: 'n', f: `=SUM(F2:F${N_nib+1})` };
+      wsGOnly['!ref'] = `A1:F${gTotalRowIdx}`;
+
+      applyStylesToSheet(wsGOnly, 1, false);
+      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Not in Books(2B Only)');
+
+      // 5. Reconciliation Summary with formulas
       const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
       const summaryRows = state.summary.map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
       const wsSummary = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
-      
-      // Let's configure custom formulas to make it extremely premium
-      const N_m = res.matched.length;
-      const N_d = res.amountDiffers.length;
-      wsSummary['B2'] = { t: 'n', f: `=SUM(Matched!D2:Matched!D${N_m+1})` };
-      wsSummary['E2'] = { t: 'n', f: `=SUM(Matched!J2:Matched!J${N_m+1})` };
 
-      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary Paper');
+      const idx_m_tot = N_m + 3;
+      const idx_d_tot = N_d + 2;
+      const idx_b_tot = N_ni2b + 2;
+      const idx_g_tot = N_nib + 2;
 
-      XLSX.writeFile(wb, `GST_Offline_Reconciled_Report_AJ_v1.0.xlsx`);
+      // Link values to Sheet totals dynamically using exact formulas
+      wsSummary['B2'] = { t: 'n', f: `='Matched'!D${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['B3'] = { t: 'n', f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!F${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
+      wsSummary['B5'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
+
+      // Reconciled Calculation Column B..E
+      wsSummary['B6'] = { t: 'n', f: `=B2+B3+B4-B5` };
+      wsSummary['C6'] = { t: 'n', f: `=C2+C3+C4-C5` };
+      wsSummary['D6'] = { t: 'n', f: `=D2+D3+D4-D5` };
+      wsSummary['E6'] = { t: 'n', f: `=E2+E3+E4-E5` };
+
+      // Actual 2B total
+      wsSummary['B7'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+
+      // Difference Row
+      wsSummary['B8'] = { t: 'n', f: `=B6-B7` };
+      wsSummary['C8'] = { t: 'n', f: `=C6-C7` };
+      wsSummary['D8'] = { t: 'n', f: `=D6-D7` };
+      wsSummary['E8'] = { t: 'n', f: `=E6-E7` };
+
+      // Anchor Hyperlinks inside summary to quickly jump between tabs
+      const attachLink = (cell, sheetName) => {
+        if (wsSummary[cell]) {
+          wsSummary[cell].l = {
+            Target: `#'${sheetName}'!A1`,
+            Tooltip: `Jump to sheet ${sheetName}`
+          };
+        }
+      };
+
+      attachLink('A2', 'Matched');
+      attachLink('A3', 'Not in Books(2B Only)');
+      attachLink('A4', 'Amount Variance');
+      attachLink('A5', 'Not in 2B(Books Only)');
+      attachLink('A7', 'Matched');
+
+      applyStylesToSheet(wsSummary, 1, true);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
+
+      XLSX.writeFile(wb, `GST_Reconciled_Report_AJ_v1.0.xlsx`);
     }
 
     function restartWorkspace() {
@@ -1496,6 +1752,49 @@
       resetTrackerUI('gstr2b');
       document.getElementById('runtime-controls').classList.add('hidden');
     }
+
+    function applyTheme(isDark) {
+      const knob = document.getElementById('theme-knob');
+      const label = document.getElementById('theme-label');
+      const container = document.getElementById('knob-icon-parent');
+      
+      if (!knob || !label || !container) return;
+      
+      if (isDark) {
+        document.body.classList.add('dark');
+        knob.classList.add('translate-x-[24px]');
+        knob.classList.remove('translate-x-0');
+        label.textContent = 'Dark Mode';
+        container.innerHTML = `
+          <svg class="w-3 h-3 text-slate-800" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        `;
+      } else {
+        document.body.classList.remove('dark');
+        knob.classList.remove('translate-x-[24px]');
+        knob.classList.add('translate-x-0');
+        label.textContent = 'Light Mode';
+        container.innerHTML = `
+          <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+          </svg>
+        `;
+      }
+    }
+
+    function toggleTheme() {
+      const isDarkNow = document.body.classList.contains('dark');
+      const nextDark = !isDarkNow;
+      localStorage.setItem('aj-recon-darkmode', nextDark ? '1' : '0');
+      applyTheme(nextDark);
+    }
+
+    // On Load themes
+    document.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('aj-recon-darkmode');
+      applyTheme(saved === '1');
+    });
   </script>
 </body>
 </html>
