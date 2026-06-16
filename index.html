@@ -1073,10 +1073,10 @@
       };
 
       const calc = {
-        tv: bt.tv + nib.tv - ni2b.tv,
-        ig: bt.ig + nib.ig - ni2b.ig,
-        cg: bt.cg + nib.cg - ni2b.cg,
-        sg: bt.sg + nib.sg - ni2b.sg
+        tv: bt.tv + nib.tv + adj.tv - ni2b.tv,
+        ig: bt.ig + nib.ig + adj.ig - ni2b.ig,
+        cg: bt.cg + nib.cg + adj.cg - ni2b.cg,
+        sg: bt.sg + nib.sg + adj.sg - ni2b.sg
       };
 
       const diff = {
@@ -1560,10 +1560,14 @@
             const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
             const cell = ws[cellRef];
             if (cell) {
+              const isNumeric = cell.t === 'n' || typeof cell.v === 'number';
+              if (isNumeric) {
+                cell.z = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)';
+              }
+
               let valStr = '';
               if (cell.v !== undefined && cell.v !== null) {
                 if (typeof cell.v === 'number') {
-                  cell.z = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)';
                   valStr = cell.v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 } else {
                   valStr = String(cell.v);
@@ -1606,7 +1610,7 @@
                 } else {
                   cell.s = {
                     font: { name: "Calisto MT", sz: 9 },
-                    alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" },
+                    alignment: { vertical: "center", horizontal: isNumeric ? "right" : "left" },
                     border: {
                       top: { style: "thin", color: { rgb: "E2E8F0" } },
                       bottom: { style: "thin", color: { rgb: "E2E8F0" } },
@@ -1700,10 +1704,7 @@
 
       // 5. Reconciliation Summary with formulas
       const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
-      // Filter out Amount Difference in Accounts from summary rows in Excel
-      const summaryRows = state.summary
-        .filter(s => !s.label.includes("Amount Difference"))
-        .map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
+      const summaryRows = state.summary.map(s => [s.label, s.tv, s.ig, s.cg, s.sg]);
       const wsSummary = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
 
       const idx_m_tot = N_m + 3;
@@ -1713,23 +1714,42 @@
 
       // Link values to Sheet totals dynamically using exact formulas
       wsSummary['B2'] = { t: 'n', f: `='Matched'!D${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C2'] = { t: 'n', f: `=0` };
+      wsSummary['D2'] = { t: 'n', f: `=0` };
+      wsSummary['E2'] = { t: 'n', f: `=0` };
+
       wsSummary['B3'] = { t: 'n', f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['B4'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C3'] = { t: 'n', f: `=0` };
+      wsSummary['D3'] = { t: 'n', f: `=0` };
+      wsSummary['E3'] = { t: 'n', f: `=0` };
 
-      // Reconciled Calculation Column B..E (Row 5 - index 4)
-      wsSummary['B5'] = { t: 'n', f: `=B2+B3-B4` };
-      wsSummary['C5'] = { t: 'n', f: `=C2+C3-C4` };
-      wsSummary['D5'] = { t: 'n', f: `=D2+D3-D4` };
-      wsSummary['E5'] = { t: 'n', f: `=E2+E3-E4` };
+      wsSummary['B4'] = { t: 'n', f: `='Amount Variance'!F${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
+      wsSummary['C4'] = { t: 'n', f: `=0` };
+      wsSummary['D4'] = { t: 'n', f: `=0` };
+      wsSummary['E4'] = { t: 'n', f: `=0` };
 
-      // Actual 2B total
-      wsSummary['B6'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['B5'] = { t: 'n', f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
+      wsSummary['C5'] = { t: 'n', f: `=0` };
+      wsSummary['D5'] = { t: 'n', f: `=0` };
+      wsSummary['E5'] = { t: 'n', f: `=0` };
 
-      // Difference Row
-      wsSummary['B7'] = { t: 'n', f: `=B5-B6` };
-      wsSummary['C7'] = { t: 'n', f: `=C5-C6` };
-      wsSummary['D7'] = { t: 'n', f: `=D5-D6` };
-      wsSummary['E7'] = { t: 'n', f: `=E5-E6` };
+      // Reconciled Calculation Column B..E (Row 6 - index 5 - B6)
+      wsSummary['B6'] = { t: 'n', f: `=B2+B3+B4-B5` };
+      wsSummary['C6'] = { t: 'n', f: `=C2+C3+C4-C5` };
+      wsSummary['D6'] = { t: 'n', f: `=D2+D3+D4-D5` };
+      wsSummary['E6'] = { t: 'n', f: `=E2+E3+E4-E5` };
+
+      // Actual 2B total (Row 7 - index 6 - B7)
+      wsSummary['B7'] = { t: 'n', f: `='Matched'!I${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
+      wsSummary['C7'] = { t: 'n', f: `=0` };
+      wsSummary['D7'] = { t: 'n', f: `=0` };
+      wsSummary['E7'] = { t: 'n', f: `=0` };
+
+      // Difference Row (Row 8 - index 7 - B8)
+      wsSummary['B8'] = { t: 'n', f: `=B6-B7` };
+      wsSummary['C8'] = { t: 'n', f: `=C6-C7` };
+      wsSummary['D8'] = { t: 'n', f: `=D6-D7` };
+      wsSummary['E8'] = { t: 'n', f: `=E6-E7` };
 
       // Anchor Hyperlinks inside summary to quickly jump between tabs
       const attachLink = (cell, sheetName) => {
@@ -1743,8 +1763,9 @@
 
       attachLink('A2', 'Matched');
       attachLink('A3', 'Not in Books(2B Only)');
-      attachLink('A4', 'Not in 2B(Books Only)');
-      attachLink('A6', 'Matched');
+      attachLink('A4', 'Amount Variance');
+      attachLink('A5', 'Not in 2B(Books Only)');
+      attachLink('A7', 'Matched');
 
       applyStylesToSheet(wsSummary, 1, true);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
