@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.1 Standalone)</title>
+  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.2 Standalone)</title>
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- sheetjs (XLSX with styling support) library -->
@@ -252,7 +252,7 @@
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
             AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.1</span>
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.2</span>
           </h1>
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
@@ -539,7 +539,7 @@
       GST Reconciliation Tool — Client Sandbox Engine — Zero Server Latency · 100% Secure Private Offline Client
     </p>
     <p class="text-[10px] text-slate-550 font-black uppercase tracking-wider text-right text-blue-600">
-      Branding Designed by AJ — AJ v1.1
+      Branding Designed by AJ — AJ v1.2
     </p>
   </footer>
 
@@ -1648,7 +1648,6 @@
       wsMatched['!ref'] = `A1:J${mTotalRowIdx}`;
 
       applyStylesToSheet(wsMatched, 2, false);
-      XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
 
       // 2. Amount Variance Sheet
       const adHeaders = ['Supplier', 'Invoice (Books)', 'Taxable (Books)', 'GST (Books)', 'Invoice (2B)', 'Taxable (2B)', 'GST (2B)', 'Taxable Diff', 'GST Diff'];
@@ -1670,7 +1669,6 @@
       wsAd['!ref'] = `A1:I${adTotalRowIdx}`;
 
       applyStylesToSheet(wsAd, 1, false);
-      XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
 
       // 3. Books Only (Not in 2B)
       const bOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
@@ -1685,7 +1683,6 @@
       wsBOnly['!ref'] = `A1:F${bTotalRowIdx}`;
 
       applyStylesToSheet(wsBOnly, 1, false);
-      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Not in 2B(Books Only)');
 
       // 4. GSTR-2B Only (Not in Books)
       const gOnlyHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'Total GST'];
@@ -1700,7 +1697,6 @@
       wsGOnly['!ref'] = `A1:F${gTotalRowIdx}`;
 
       applyStylesToSheet(wsGOnly, 1, false);
-      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Not in Books(2B Only)');
 
       // 5. Reconciliation Summary with formulas
       const summaryHeaders = ['Particulars Description', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
@@ -1769,8 +1765,12 @@
 
       applyStylesToSheet(wsSummary, 1, true);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
+      XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
+      XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
+      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Not in 2B(Books Only)');
+      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Not in Books(2B Only)');
 
-      const finalName = customName || `GST_Reconciled_Report_AJ_v1.1.xlsx`;
+      const finalName = customName || `GST_Reconciled_Report_AJ_v1.2.xlsx`;
       const fn = finalName.endsWith('.xlsx') ? finalName : `${finalName}.xlsx`;
 
       if (usePicker && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
