@@ -252,7 +252,7 @@
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
             AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.4</span>
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.5</span>
           </h1>
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
@@ -1587,7 +1587,49 @@
       `;
     }
 
-    function exportReconciliationReport(customName, usePicker = false) {
+    async function dispatchExport(blob, filename, mimeType, useFileSystem) {
+      const extension = filename.split('.').pop() || 'xlsx';
+      const finalFilename = filename.endsWith(`.${extension}`) ? filename : `${filename}.${extension}`;
+
+      const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+      if (useFileSystem && !isIframe && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: finalFilename,
+            types: [{
+              description: 'Document Description Reference Name',
+              accept: { [mimeType]: [`.${extension}`] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            throw err;
+          }
+          console.warn('Native Save File Picker fell back or was blocked in this context:', err);
+        }
+      }
+
+      // Fallback: Dynamic anchor download (Direct Browser Download)
+      if (typeof window !== 'undefined') {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = finalFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 100);
+      }
+    }
+
+    async function exportReconciliationReport(customName, usePicker = false) {
       if (!state.results) return;
 
       const wb = XLSX.utils.book_new();
@@ -2022,32 +2064,10 @@
 
       const finalName = customName || `GST_Reconciled_Report_AJ_v1.2.xlsx`;
       const fn = finalName.endsWith('.xlsx') ? finalName : `${finalName}.xlsx`;
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-      if (usePicker && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
-        (async () => {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: fn,
-              types: [{
-                description: 'Excel Workbook',
-                accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
-              }]
-            });
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-          } catch (err) {
-            console.warn(err);
-            if (err.name !== 'AbortError') {
-              XLSX.writeFile(wb, fn);
-            }
-          }
-        })();
-      } else {
-        XLSX.writeFile(wb, fn);
-      }
+      await dispatchExport(blob, fn, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', usePicker);
     }
 
     function restartWorkspace() {
@@ -2086,13 +2106,17 @@
       document.getElementById('standalone-saveas-modal').classList.add('hidden');
     }
 
-    function handleStandaloneDirectDownload() {
+    async function handleStandaloneDirectDownload() {
       // Get current filename input value if exists
       const fnInput = document.getElementById('standalone-filename-input');
       const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
       
-      exportReconciliationReport(filename, false);
-      showStandaloneToast(filename, 'Browser Downloads Folder');
+      try {
+        await exportReconciliationReport(filename, false);
+        showStandaloneToast(filename, 'Browser Downloads Folder');
+      } catch (err) {
+        console.error(err);
+      }
       closeStandaloneSaveAs();
     }
 
@@ -2100,7 +2124,9 @@
       const fnInput = document.getElementById('standalone-filename-input');
       const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
 
-      if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+      const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+      if (!isIframe && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
         try {
           await exportReconciliationReport(filename, true);
           showStandaloneToast(filename, 'Native File System Access');
@@ -2108,19 +2134,16 @@
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
-          console.warn('Native picker failed/blocked, falling back to prompt:', err);
+          console.warn('Native picker failed/blocked in this context. Falling back to direct layout download.', err);
         }
       }
 
-      // Fallback
-      const customName = window.prompt(
-        "Save As — Please enter a custom filename for your spreadsheet:\n\n(Tip: Enable 'Ask where to save each file before downloading' in Chrome Settings to pick custom paths on your local system)",
-        filename
-      );
-      if (customName !== null) {
-        const sanitized = customName.trim() || filename;
-        exportReconciliationReport(sanitized, false);
-        showStandaloneToast(sanitized, 'Browser Dialog Path');
+      // Fallback: Direct download using standard path
+      try {
+        await exportReconciliationReport(filename, false);
+        showStandaloneToast(filename, 'Browser Downloads Folder');
+      } catch (err) {
+        console.error(err);
       }
       closeStandaloneSaveAs();
     }
@@ -2218,6 +2241,12 @@
         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
           Choose how you would like to save your formula-linked reconciliation ledger:
         </p>
+
+        <!-- General Disclaimer Alert -->
+        <div class="text-[11px] text-amber-550 dark:text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 leading-normal flex items-start gap-2 text-left">
+          <span class="text-xs mt-0.5">⚠️</span>
+          <span><strong>Note:</strong> Best works in Google Chrome. In iframe/embedded views, single-clicking will instantly and safely download to your default downloads folder.</span>
+        </div>
 
         <div class="space-y-4">
           <!-- Option 1: Direct browser download -->
