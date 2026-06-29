@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GST Reconciliation Tool — Books vs GSTR-2B (AJ v1.2 Standalone)</title>
+  <title>GST Reconciliation Tool — Books vs GSTR-2B (Recon Engine v1.6.1)</title>
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- sheetjs (XLSX with styling support) library -->
@@ -252,31 +252,28 @@
         <div>
           <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2.5">
             AJ Innovation &amp; Design
-            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.5</span>
+            <span class="px-2.5 py-0.5 rounded bg-blue-500/15 text-[11px] text-blue-300 font-bold tracking-wide border border-blue-500/25">Recon Engine v1.6.1</span>
           </h1>
           <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-0.5">UNIVERSAL LEDGER &amp; RECONCILIATION SUITE</p>
         </div>
       </div>
       
       <div class="flex items-center gap-4 shrink-0">
-        <!-- THEME TOGGLE (Sun/Moon Switch matches Second Image) -->
+        <!-- THEME TOGGLE -->
         <div class="flex items-center gap-3 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 shadow-inner select-none shrink-0">
           <span id="theme-label" class="text-xs font-semibold text-slate-200">Light Mode</span>
           <button onclick="toggleTheme()" class="relative flex items-center h-[26px] w-[50px] rounded-full bg-slate-800 hover:bg-slate-700 p-0.5 cursor-pointer transition-colors duration-300">
             <div class="absolute inset-0 flex justify-between items-center px-1.5 text-slate-500 pointer-events-none">
-              <!-- Sun SVG -->
               <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="4" stroke="currentColor" fill="none"/>
                 <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor"/>
               </svg>
-              <!-- Moon SVG -->
               <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" stroke="currentColor" fill="none"/>
               </svg>
             </div>
             <div id="theme-knob" class="w-[20px] h-[20px] rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 z-10 translate-x-0">
               <span id="knob-icon-parent">
-                <!-- Sun SVG inside knob -->
                 <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="4"/>
                 </svg>
@@ -307,17 +304,21 @@
           <h2 class="text-base font-bold text-slate-900">Upload Spreadsheet Invoices</h2>
           <p class="text-xs text-slate-500 font-medium">Add books of account alongside GSTR-2B download archives to initiate matching logic.</p>
         </div>
-        <button onclick="toggleFieldMapper()" id="mapper-trigger-btn" class="hidden text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200">
-          ⚙ Field Mapping Selection <span id="mapper-angle">▼</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFieldMapper()" id="mapper-trigger-btn" class="hidden text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200">
+            ⚙ Field Mapping Selection <span id="mapper-angle">▼</span>
+          </button>
+        </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6 font-sans">
-        <!-- BOOKS DRAG AND DROP -->
+        <!-- SOURCE 1 DRAG AND DROP -->
         <div class="space-y-2 bg-slate-50/50 p-4 border border-slate-150 rounded-xl">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-widest">Purchase Ledger (Books)</span>
-            <span class="text-xs font-semibold text-slate-400">Ledger entries</span>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <input type="text" id="source1-name" value="Purchase Ledger (Books)" 
+                   class="text-xs font-bold px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-widest w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                   onchange="updateSourceNames()">
+            <span class="text-xs font-semibold text-slate-400 whitespace-nowrap">Source 1</span>
           </div>
           
           <div id="books-drop" class="upload-zone rounded-xl p-8 flex flex-col items-center justify-center text-center bg-white border-slate-200"
@@ -325,1992 +326,565 @@
             <input type="file" id="books-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelected(event, 'books')">
             <div id="books-upload-indicator" class="space-y-2">
               <span class="text-3xl block">📊</span>
-              <p class="text-sm font-bold text-slate-700">Drop Purchase Register here</p>
-              <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
+              <p class="text-sm font-bold text-slate-700" id="books-drop-text">Drop Purchase Register here</p>
+              <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Supports XLSX, XLS, CSV</p>
             </div>
           </div>
+          
+          <div id="books-tracker" class="hidden bg-white border border-slate-200 rounded-lg p-3 space-y-3">
+             <div class="flex items-center justify-between">
+                <span id="books-filename" class="text-xs font-bold text-slate-700 truncate max-w-[150px]">file.xlsx</span>
+                <button onclick="resetTrackerUI('books')" class="text-[10px] font-bold text-red-500 hover:underline">Remove</button>
+             </div>
+             
+             <!-- Sheet Selector Source 1 -->
+             <div id="books-sheet-container" class="hidden flex items-center justify-between gap-2 bg-blue-50/30 p-2 rounded border border-blue-100"></div>
 
-          <!-- SHEET SELECTION CONFIGURATION -->
-          <div id="books-sheet-container" class="hidden flex items-center justify-between gap-2 bg-blue-50/50 border border-blue-100 rounded-lg p-2 mt-2"></div>
-
-          <!-- START ROW CONFIGURATION -->
-          <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
-            <div>
-              <label class="text-[10px] font-black text-slate-500 uppercase block">Data starts on row</label>
-              <span class="text-[10px] text-slate-400 font-medium">Select where headers are located</span>
-            </div>
-            <select id="books-start-row" onchange="reprocessLoadedFile('books')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-slate-50 text-slate-800">
-              <option value="1" selected>Row 1 (Default)</option>
-              <option value="2">Row 2</option>
-              <option value="3">Row 3</option>
-              <option value="4">Row 4</option>
-              <option value="5">Row 5</option>
-              <option value="6">Row 6</option>
-              <option value="7">Row 7</option>
-              <option value="8">Row 8</option>
-              <option value="9">Row 9</option>
-              <option value="10">Row 10</option>
-              <option value="11">Row 11</option>
-              <option value="12">Row 12</option>
-              <option value="13">Row 13</option>
-              <option value="14">Row 14</option>
-              <option value="15">Row 15</option>
-            </select>
+             <div class="flex items-center gap-2">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">Start Row:</label>
+                <input type="number" id="books-start-row" value="1" min="1" class="w-12 text-[10px] border border-slate-200 rounded px-1 py-0.5 focus:outline-none">
+                <button onclick="reprocessFile('books')" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Reload</button>
+             </div>
           </div>
         </div>
 
-        <!-- GSTR-2B DRAG AND DROP -->
+        <!-- SOURCE 2 DRAG AND DROP -->
         <div class="space-y-2 bg-slate-50/50 p-4 border border-slate-150 rounded-xl">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 uppercase tracking-widest">GSTR-2B Portal Download</span>
-            <span class="text-xs font-semibold text-slate-400">Government Portal statement</span>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <input type="text" id="source2-name" value="GSTR-2B (Portal)" 
+                   class="text-xs font-bold px-2.5 py-1 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 uppercase tracking-widest w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                   onchange="updateSourceNames()">
+            <span class="text-xs font-semibold text-slate-400 whitespace-nowrap">Source 2</span>
           </div>
           
           <div id="gstr2b-drop" class="upload-zone rounded-xl p-8 flex flex-col items-center justify-center text-center bg-white border-slate-200"
                ondragover="setDragOver(event, 'gstr2b')" ondragleave="cancelDrag('gstr2b')" ondrop="handleFileDrop(event, 'gstr2b')" onclick="triggerFileInput('gstr2b')">
             <input type="file" id="gstr2b-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelected(event, 'gstr2b')">
             <div id="gstr2b-upload-indicator" class="space-y-2">
-              <span class="text-3xl block">🧾</span>
-              <p class="text-sm font-bold text-slate-700">Drop GSTR-2B Download here</p>
-              <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
+              <span class="text-3xl block">📥</span>
+              <p class="text-sm font-bold text-slate-700" id="gstr2b-drop-text">Drop GSTR-2B Archive here</p>
+              <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Portal Excel / JSON Exports</p>
             </div>
           </div>
 
-          <!-- SHEET SELECTION CONFIGURATION -->
-          <div id="gstr2b-sheet-container" class="hidden flex items-center justify-between gap-2 bg-emerald-50/50 border border-emerald-100 rounded-lg p-2 mt-2"></div>
+          <div id="gstr2b-tracker" class="hidden bg-white border border-slate-200 rounded-lg p-3 space-y-3">
+             <div class="flex items-center justify-between">
+                <span id="gstr2b-filename" class="text-xs font-bold text-slate-700 truncate max-w-[150px]">file.xlsx</span>
+                <button onclick="resetTrackerUI('gstr2b')" class="text-[10px] font-bold text-red-500 hover:underline">Remove</button>
+             </div>
 
-          <!-- START ROW CONFIGURATION -->
-          <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-2">
-            <div>
-              <label class="text-[10px] font-black text-slate-500 uppercase block">Data starts on row</label>
-              <span class="text-[10px] text-slate-400 font-medium">Select where headers are located</span>
-            </div>
-            <select id="gstr2b-start-row" onchange="reprocessLoadedFile('gstr2b')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-slate-50 text-slate-800">
-              <option value="1" selected>Row 1 (Default)</option>
-              <option value="2">Row 2</option>
-              <option value="3">Row 3</option>
-              <option value="4">Row 4</option>
-              <option value="5">Row 5</option>
-              <option value="6">Row 6</option>
-              <option value="7">Row 7</option>
-              <option value="8">Row 8</option>
-              <option value="9">Row 9</option>
-              <option value="10">Row 10</option>
-              <option value="11">Row 11</option>
-              <option value="12">Row 12</option>
-              <option value="13">Row 13</option>
-              <option value="14">Row 14</option>
-              <option value="15">Row 15</option>
-            </select>
+             <!-- Sheet Selector Source 2 -->
+             <div id="gstr2b-sheet-container" class="hidden flex items-center justify-between gap-2 bg-emerald-50/30 p-2 rounded border border-emerald-100"></div>
+
+             <div class="flex items-center gap-2">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">Start Row:</label>
+                <input type="number" id="gstr2b-start-row" value="1" min="1" class="w-12 text-[10px] border border-slate-200 rounded px-1 py-0.5 focus:outline-none">
+                <button onclick="reprocessFile('gstr2b')" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Reload</button>
+             </div>
           </div>
         </div>
       </div>
 
-      <!-- FIELD MAPPER PANEL -->
-      <div id="field-mapper" class="hidden border-t border-slate-200 pt-6 space-y-4">
-        <p class="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-          💡 If column headers in your spreadsheets differ from typical names, select standard headers manually to ensure correct parser indexing.
-        </p>
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-1.5 flex items-center gap-1">📖 Books Mapping Coordinates</h3>
-            <div id="books-mapper-fields" class="space-y-2"></div>
+      <!-- FIELD MAPPER -->
+      <div id="field-mapper-container" class="hidden border-t border-slate-100 pt-6 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-widest">Header Column Mapping</h3>
+            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">AUTO-DETECTED</span>
           </div>
-          <div class="space-y-2">
-            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-1.5 flex items-center gap-1">🧾 GSTR-2B Mapping Coordinates</h3>
-            <div id="gstr2b-mapper-fields" class="space-y-2"></div>
+          <div class="grid md:grid-cols-2 gap-8">
+            <div id="books-mapping-list" class="space-y-3"></div>
+            <div id="gstr2b-mapping-list" class="space-y-3"></div>
           </div>
-        </div>
-      </div>
-
-      <!-- CONFIG & RUN BUTTONS -->
-      <div class="border-t border-slate-200 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex flex-col gap-1 w-full sm:w-auto">
-          <label class="text-xs font-bold text-slate-605 uppercase tracking-wide">Fallback Matching Mode Rule</label>
-          <select id="matching-mode" class="p-2 border border-slate-300 rounded-lg text-sm font-bold bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 h-9 shrink-0">
-            <option value="auto" selected>Auto (Hierarchical fallback passes 1-5)</option>
-            <option value="tier1">Strictly: Taxable Value + Name Match + Date Match (Tier 1)</option>
-            <option value="tier2">Strictly: Taxable Value + Name Similarity (Tier 2)</option>
-            <option value="tier3">Strictly: Taxable Value + Date Match (Tier 3)</option>
-            <option value="tier4">Strictly: Exact Invoice Number + Taxable Value Match (Tier 4)</option>
-            <option value="tier5">Identifier Only: Loose Invoice Document Match (Tier 5)</option>
-          </select>
-        </div>
-
-        <button id="run-reconcile-btn" onclick="startMatchingProcess()" disabled
-                class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition h-10 cursor-pointer">
-          ▶ Start Match Calculation
-        </button>
-      </div>
-
-      <!-- PROCESS PROGRESS -->
-      <div id="prog-wrap" class="hidden pt-3 space-y-1.5">
-        <div class="flex justify-between items-center text-xs font-bold">
-          <span id="prog-lbl" class="text-slate-600">Reconciling records...</span>
-          <span id="prog-pct" class="text-blue-600">0%</span>
-        </div>
-        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-          <div id="prog-fill" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-100" style="width: 0%"></div>
+          <div class="mt-6 flex justify-end">
+            <button onclick="runReconciliation()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-extrabold text-sm shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95">
+              🚀 Run Reconciliation Engine
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- INSTRUCTIONS CONTAINER when empty -->
-    <div id="app-landing-instructions" class="border-2 border-dashed border-slate-300 bg-white rounded-2xl p-12 text-center max-w-2xl mx-auto space-y-4">
-      <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-650 flex items-center justify-center mx-auto text-xl shadow-inner shadow-blue-200">📈</div>
-      <div class="space-y-2">
-        <h3 class="text-base font-black text-slate-800">GST Client Sandbox Ledger Engine</h3>
-        <p class="text-sm text-slate-500 font-medium leading-relaxed">
-          Upload spreadsheets containing books and downloaded portals to initiate calculations. All data is processed entirely in your browser locally, utilizing secure client-side sandbox computations. No data is sent to a server.
-        </p>
+    <!-- PROCESSING OVERLAY -->
+    <div id="processing-overlay" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+      <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
+        <div class="spinner"></div>
+        <p class="text-sm font-bold text-slate-800">Processing Reconciliation...</p>
       </div>
     </div>
 
-    <!-- PERFORMANCE DASHBOARDS -->
-    <div id="dashboard-metrics-container" class="hidden space-y-8">
+    <!-- RESULTS VIEWPORT -->
+    <div id="results-viewport" class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      <!-- GRID METRIC CARDS -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stat-grid-row"></div>
-
-      <!-- CHARTS PANEL -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest pb-3 border-b border-slate-150 flex items-center gap-1.5">📊 Status Distribution Breakdown</h3>
-          <div class="h-64 w-full relative pt-4 flex items-center justify-center">
-            <canvas id="status-donut-canvas"></canvas>
+      <!-- SUMMARY CARDS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Invoices</p>
+          <div class="flex items-baseline gap-2">
+            <span id="stat-total-count" class="text-2xl font-black text-slate-900">0</span>
+            <span class="text-[10px] font-bold text-slate-400">Records</span>
           </div>
         </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest pb-3 border-b border-slate-150 flex items-center gap-1.5">💰 GST Value Aligned (Books vs GSTR-2B)</h3>
-          <div class="h-64 w-full pt-4">
-            <canvas id="val-bar-canvas"></canvas>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] font-extrabold text-emerald-500 uppercase tracking-widest mb-1">Fully Matched</p>
+          <div class="flex items-baseline gap-2">
+            <span id="stat-matched-count" class="text-2xl font-black text-emerald-600">0</span>
+            <span id="stat-matched-pct" class="text-[10px] font-bold text-emerald-500">0%</span>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest mb-1">Amount Diff</p>
+          <div class="flex items-baseline gap-2">
+            <span id="stat-diff-count" class="text-2xl font-black text-amber-600">0</span>
+            <span class="text-[10px] font-bold text-amber-500">Alerts</span>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-widest mb-1">Missing</p>
+          <div class="flex items-baseline gap-2">
+            <span id="stat-missing-count" class="text-2xl font-black text-red-600">0</span>
+            <span class="text-[10px] font-bold text-red-500">Unreconciled</span>
           </div>
         </div>
       </div>
 
-      <!-- TAB SELECTION PANELS -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-        
-        <!-- HEADER BUTTONS -->
-        <div class="flex border-b border-slate-200 bg-slate-50 overflow-x-auto scrollbar-thin">
-          <button onclick="switchTab('matched', this)" class="tab-btn active px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-emerald-800 border-emerald-600 active" style="--tab-color: #10b981">
-            ✓ Fully Matched <span id="lbl-c-matched" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-extrabold ml-1">0</span>
-          </button>
-          <button onclick="switchTab('amtdiff', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f59e0b">
-            ⚠ Amount Differs <span id="lbl-c-amtdiff" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-extrabold ml-1">0</span>
-          </button>
-          <button onclick="switchTab('notIn2B', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f43f5e">
-            ✕ Not in 2B (Books Only) <span id="lbl-c-ni2b" class="px-2 py-0.5 rounded-full text-[10px] bg-red-100 text-red-800 font-extrabold ml-1">0</span>
-          </button>
-          <button onclick="switchTab('notInBooks', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #f97316">
-            ✕ Not in Books (2B Only) <span id="lbl-c-nib" class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800 font-extrabold ml-1">0</span>
-          </button>
-          <button onclick="switchTab('recosheet', this)" class="tab-btn px-5 py-4 text-xs font-bold whitespace-nowrap flex items-center gap-2 text-slate-600" style="--tab-color: #3b82f6">
-            📋 Working Paper Summary
-          </button>
+      <!-- TABS SYSTEM -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="flex overflow-x-auto bg-slate-50/50 border-b border-slate-200 no-scrollbar">
+          <button onclick="switchTab('summary')" class="tab-btn active px-6 py-4 text-xs font-bold whitespace-nowrap" id="tab-summary-btn" style="--tab-color: #0f172a">📋 RECON SUMMARY</button>
+          <button onclick="switchTab('matched')" class="tab-btn px-6 py-4 text-xs font-bold whitespace-nowrap" id="tab-matched-btn" style="--tab-color: #10b981">✅ FULLY MATCHED</button>
+          <button onclick="switchTab('diff')" class="tab-btn px-6 py-4 text-xs font-bold whitespace-nowrap" id="tab-diff-btn" style="--tab-color: #f59e0b">⚠️ AMOUNT VARIANCE</button>
+          <button onclick="switchTab('books-only')" class="tab-btn px-6 py-4 text-xs font-bold whitespace-nowrap" id="tab-books-only-btn" style="--tab-color: #ef4444">📕 MISSING IN 2B</button>
+          <button onclick="switchTab('gstr-only')" class="tab-btn px-6 py-4 text-xs font-bold whitespace-nowrap" id="tab-gstr-only-btn" style="--tab-color: #6366f1">📘 MISSING IN BOOKS</button>
         </div>
 
-        <!-- SEARCH FILTERS VIEW -->
-        <div id="table-search-panel" class="bg-white border-b border-slate-100 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div class="relative w-full sm:max-w-xs">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔍</span>
-            <input type="text" id="recon-search-box" oninput="applyFilters()" placeholder="Search Invoice No, Supplier, GSTIN..."
-                   class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div class="w-full sm:w-auto flex items-center gap-2 justify-end">
-            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Vendor filter:</label>
-            <select id="recon-vendor-filter" onchange="applyFilters()" class="p-1 px-2 border border-slate-300 rounded text-xs font-medium max-w-xs bg-slate-50">
-              <option value="">-- All Suppliers --</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- LIST VIEWS -->
-        <div class="p-6">
-          <div id="tab-viewport-matched" class="tab-pane space-y-4"></div>
-          <div id="tab-viewport-amtdiff" class="tab-pane hidden space-y-4"></div>
-          <div id="tab-viewport-notIn2B" class="tab-pane hidden space-y-4"></div>
-          <div id="tab-viewport-notInBooks" class="tab-pane hidden space-y-4"></div>
-          <div id="tab-viewport-recosheet" class="tab-pane hidden space-y-4"></div>
-        </div>
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- BOTTOM FOOTER -->
-  <footer class="border-t border-slate-200 bg-slate-50 py-4 px-6 text-center mt-12 bg-white flex items-center justify-between">
-    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-left">
-      GST Reconciliation Tool — Client Sandbox Engine — Zero Server Latency · 100% Secure Private Offline Client
-    </p>
-    <p class="text-[10px] text-slate-550 font-black uppercase tracking-wider text-right text-blue-600">
-      Branding Designed by AJ — AJ v1.2
-    </p>
-  </footer>
-
-  <!-- =====================================================================
-       STANDALONE RECONCILIATION ENGINE JAVASCRIPT
-       ===================================================================== -->
-  <script>
-    // System registry states
-    const state = {
-      books: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: '' },
-      gstr2b: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: '' },
-      results: null,
-      summary: [],
-      chartInstances: [],
-      activeTab: 'matched'
-    };
-
-    const COLS_DEFINITION = {
-      supplierName: "Supplier / Party Name",
-      gstin: "GSTIN of Supplier",
-      invoiceNo: "Invoice Number",
-      invoiceDate: "Invoice Date",
-      taxableValue: "Taxable Value",
-      igst: "IGST Amount",
-      cgst: "CGST Amount",
-      sgst: "SGST / UTGST Amount",
-      totalGst: "Total GST Amount"
-    };
-
-    const COL_AUTO_REGEX_PATTERNS = {
-      supplierName: [/supplier.*name/i, /vendor.*name/i, /party.*name/i, /trade.*name/i, /legal.*name/i, /company.*name/i, /\bsupplier\b/i, /\bvendor\b/i, /\bparty\b/i],
-      gstin: [/gstin/i, /gst.*no/i, /gst.*num/i, /supplier.*gst/i, /party.*gst/i],
-      invoiceNo: [/inv.*no/i, /inv.*num/i, /bill.*no/i, /doc.*no/i, /voucher/i, /invoice/i, /doc.*id/i],
-      invoiceDate: [/inv.*date/i, /bill.*date/i, /date.*of.*issue/i, /doc.*date/i, /\bdate\b/i],
-      taxableValue: [/taxable.*value/i, /taxable.*amt/i, /base.*amount/i, /assessable/i, /taxable/i],
-      igst: [/igst/i, /i\.gst/i, /integrated/i],
-      cgst: [/cgst/i, /c\.gst/i, /central/i],
-      sgst: [/sgst/i, /s\.gst/i, /state.*tax/i, /utgst/i, /state/i],
-      totalGst: [/total.*gst/i, /gst.*amount/i, /total.*tax/i, /tax.*amount/i]
-    };
-
-    // Formatting utilities
-    function formatIndianCurrency(n) {
-      if (n === undefined || n === null || isNaN(n)) return '—';
-      return Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-    }
-
-    function formatShortK(n) {
-      if (Math.abs(n) >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
-      if (Math.abs(n) >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
-      return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
-    }
-
-    function escapeString(s) {
-      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function parseNumericString(v) {
-      if (v === null || v === undefined || v === '') return 0;
-      if (typeof v === 'number') return v;
-      const parsed = Number(String(v).replace(/[,\s₹]/g, ''));
-      return isNaN(parsed) ? 0 : parsed;
-    }
-
-    function parseNumericExcelDate(v) {
-      if (!v) return null;
-      if (typeof v === 'number') {
-        const d = new Date(Math.round((v - 25569) * 86400 * 1000));
-        return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      }
-      return String(v).replace(/[-\.]/g, '/').trim();
-    }
-
-    // Alignment and similarity rules
-    function normalizePartyName(raw) {
-      if (!raw) return '';
-      return String(raw)
-        .toUpperCase()
-        .replace(/\b(PVT\.?\s*LTD\.?|PRIVATE\s+LIMITED|LIMITED|LTD\.?|LLP|INC\.?|CORP\.?|CO\.?|COMPANY|ENTERPRISES?|TRADING|INDIA|AND|&)\b/g, ' ')
-        .replace(/[^A-Z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function normalizeInvoiceNo(raw) {
-      if (!raw) return '';
-      return String(raw)
-        .replace(/[\s\/\-\\]/g, '')
-        .replace(/[^a-zA-Z0-9]/g, '')
-        .replace(/^0+/, '')
-        .toUpperCase();
-    }
-
-    function assessNameSimilarity(setA, setB) {
-      if (!setA.size || !setB.size) return 0;
-      let matches = 0;
-      for (const w of setA) {
-        if (setB.has(w)) {
-          matches++;
-          continue;
-        }
-        for (const ww of setB) {
-          if (w.length >= 3 && ww.length >= 3 && (w.startsWith(ww) || ww.startsWith(w))) {
-            matches += 0.6;
-            break;
-          }
-        }
-      }
-      return matches / Math.max(setA.size, setB.size);
-    }
-
-    function testInvoiceSlidings(bn, gn) {
-      if (!bn || !gn) return false;
-      if (bn === gn) return true;
-      for (let len = 4; len <= 8; len++) {
-        const bs = bn.slice(-len);
-        const gs = gn.slice(-len);
-        if (bs && gs && bs === gs && /^\d+$/.test(bs)) return true;
-      }
-      return gn.endsWith(bn) || bn.endsWith(gn) || gn.includes(bn) || bn.includes(gn);
-    }
-
-    // Auto Column Mapping
-    function runAutoDetection(headers) {
-      const mapping = {};
-      const used = new Set();
-      const keys = ['invoiceNo', 'taxableValue', 'igst', 'cgst', 'sgst', 'totalGst', 'gstin', 'supplierName', 'invoiceDate'];
-
-      for (const key of keys) {
-        for (const h of headers) {
-          if (used.has(h)) continue;
-          const patterns = COL_AUTO_REGEX_PATTERNS[key] || [];
-          if (patterns.some(p => p.test(h))) {
-            mapping[key] = h;
-            used.add(h);
-            break;
-          }
-        }
-      }
-      return mapping;
-    }
-
-    // Input handlers Trigger
-    function triggerFileInput(side) {
-      document.getElementById(`${side}-file-input`).click();
-    }
-
-    function setDragOver(e, side) {
-      e.preventDefault();
-      document.getElementById(`${side}-drop`).classList.add('drag');
-    }
-
-    function cancelDrag(side) {
-      document.getElementById(`${side}-drop`).classList.remove('drag');
-    }
-
-    function handleFileDrop(e, side) {
-      e.preventDefault();
-      cancelDrag(side);
-      const file = e.dataTransfer.files[0];
-      if (file) loadLocalFile(file, side);
-    }
-
-    function handleFileSelected(e, side) {
-      const file = e.target.files[0];
-      if (file) loadLocalFile(file, side);
-    }
-
-    function loadLocalFile(file, side) {
-      const indicator = document.getElementById(`${side}-upload-indicator`);
-      indicator.innerHTML = `
-        <div class="flex flex-col items-center gap-2">
-          <div class="spinner"></div>
-          <span class="text-xs font-bold text-slate-500">Scanning data array...</span>
-        </div>
-      `;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetNames = workbook.SheetNames || [];
-          if (sheetNames.length === 0) throw new Error('No sheets found in this file workbook');
-          const firstSheet = sheetNames[0];
-          const sheet = workbook.Sheets[firstSheet];
-          const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-
-          if (rawRows.length === 0) throw new Error('Sheet data looks empty.');
-
-          state[side].rawGrid = rawRows;
-          state[side].fileName = file.name;
-          state[side].workbook = workbook;
-          state[side].sheetNames = sheetNames;
-          state[side].currentSheet = firstSheet;
-
-          // Render sheet selector if multiple sheets exist
-          const sheetContainer = document.getElementById(`${side}-sheet-container`);
-          if (sheetNames.length > 1 && sheetContainer) {
-            sheetContainer.classList.remove('hidden');
-            sheetContainer.innerHTML = `
-              <div>
-                <label class="text-[10px] font-black text-slate-500 uppercase block">Select Excel Sheet</label>
-                <span class="text-[10px] text-${side === 'books' ? 'blue' : 'emerald'}-600 font-bold tracking-wide">${sheetNames.length} sheets found</span>
-              </div>
-              <select onchange="handleStandaloneSheetChange(this.value, '${side}')" class="border border-slate-300 rounded text-xs p-1 px-2 font-bold bg-white text-slate-800 max-w-[170px] truncate">
-                ${sheetNames.map(name => `<option value="${escapeString(name)}" ${name === firstSheet ? 'selected' : ''}>${escapeString(name)}</option>`).join('')}
-              </select>
-            `;
-          } else if (sheetContainer) {
-            sheetContainer.classList.add('hidden');
-            sheetContainer.innerHTML = '';
-          }
-
-          reprocessLoadedFile(side);
-
-          // Customize visual success badge
-          indicator.innerHTML = `
-            <div class="flex items-center justify-between gap-3 text-left w-full bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-sm">
-              <div class="flex items-center gap-2.5">
-                <span class="text-xl">✅</span>
-                <div>
-                  <p class="text-xs font-extrabold text-slate-800 uppercase tracking-tight truncate max-w-[190px]">${escapeString(file.name)}</p>
-                  <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Connected Successfully</p>
+        <div class="p-0 overflow-x-auto">
+          <!-- SUMMARY VIEW -->
+          <div id="view-summary" class="tab-view p-6 space-y-8">
+            <div class="grid lg:grid-cols-3 gap-8">
+              <div class="lg:col-span-2">
+                <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2">
+                  <span class="w-2 h-6 bg-slate-900 rounded-full"></span>
+                  ITC RECONCILIATION WORKING PAPER
+                </h3>
+                <div class="overflow-hidden border border-slate-200 rounded-xl">
+                  <table id="summary-table" class="font-sans">
+                    <thead>
+                      <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Taxable Value</th>
+                        <th class="text-right">IGST</th>
+                        <th class="text-right">CGST</th>
+                        <th class="text-right">SGST</th>
+                      </tr>
+                    </thead>
+                    <tbody id="summary-body"></tbody>
+                  </table>
                 </div>
               </div>
-              <button onclick="removeAttachedFile('${side}'); event.stopPropagation()" class="text-xs font-bold text-slate-400 hover:text-red-500 p-1">✕</button>
+              <div>
+                <h3 class="text-sm font-black text-slate-900 mb-4">MATCHING DISTRIBUTION</h3>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex items-center justify-center min-h-[300px]">
+                  <canvas id="reconChart"></canvas>
+                </div>
+              </div>
             </div>
-          `;
+          </div>
 
-          document.getElementById('mapper-trigger-btn').classList.remove('hidden');
-        } catch (err) {
-          alert(`Spreadsheet parsing error: ${err.message || err}`);
-          resetTrackerUI(side);
-        }
+          <!-- DATA VIEWS -->
+          <div id="view-matched" class="tab-view hidden">
+            <table id="matched-table">
+              <thead><tr id="matched-header-row"></tr></thead>
+              <tbody id="matched-body"></tbody>
+            </table>
+          </div>
+          <div id="view-diff" class="tab-view hidden">
+            <table id="diff-table">
+              <thead><tr id="diff-header-row"></tr></thead>
+              <tbody id="diff-body"></tbody>
+            </table>
+          </div>
+          <div id="view-books-only" class="tab-view hidden">
+            <table id="books-only-table">
+              <thead><tr id="books-only-header-row"></tr></thead>
+              <tbody id="books-only-body"></tbody>
+            </table>
+          </div>
+          <div id="view-gstr-only" class="tab-view hidden">
+            <table id="gstr-only-table">
+              <thead><tr id="gstr-only-header-row"></tr></thead>
+              <tbody id="gstr-only-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2026 AJ Innovation & Design • Recon Engine v1.6.1 Stable</p>
+    </div>
+  </footer>
+
+  <script>
+    const state = {
+      books: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: null },
+      gstr2b: { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: null },
+      results: null,
+      summary: [],
+      chart: null,
+      sourceNames: {
+        books: "Purchase Ledger (Books)",
+        gstr2b: "GSTR-2B (Portal)"
+      }
+    };
+
+    const FIELDS = [
+      { id: 'supplierName', label: 'Supplier Name', keywords: ['supplier', 'party', 'name', 'vendor'] },
+      { id: 'gstin', label: 'GSTIN of Supplier', keywords: ['gstin', 'gst', 'number', 'uptr'] },
+      { id: 'invoiceNo', label: 'Invoice Number', keywords: ['invoice', 'bill', 'no', 'number', 'ref'] },
+      { id: 'invoiceDate', label: 'Invoice Date', keywords: ['date', 'dated', 'inv'] },
+      { id: 'taxableValue', label: 'Taxable Value', keywords: ['taxable', 'value', 'amount', 'taxable value'] },
+      { id: 'igst', label: 'IGST Amount', keywords: ['igst', 'integrated'] },
+      { id: 'cgst', label: 'CGST Amount', keywords: ['cgst', 'central'] },
+      { id: 'sgst', label: 'SGST / UTGST Amount', keywords: ['sgst', 'utgst', 'state'] }
+    ];
+
+    function updateSourceNames() {
+      state.sourceNames.books = document.getElementById('source1-name').value || "Source 1";
+      state.sourceNames.gstr2b = document.getElementById('source2-name').value || "Source 2";
+      document.getElementById('books-drop-text').textContent = `Drop ${state.sourceNames.books} here`;
+      document.getElementById('gstr2b-drop-text').textContent = `Drop ${state.sourceNames.gstr2b} here`;
+      if (state.results) renderResults();
+    }
+
+    function triggerFileInput(type) { document.getElementById(`${type}-file-input`).click(); }
+    function setDragOver(e, type) { e.preventDefault(); document.getElementById(`${type}-drop`).classList.add('drag'); }
+    function cancelDrag(type) { document.getElementById(`${type}-drop`).classList.remove('drag'); }
+    function handleFileDrop(e, type) { e.preventDefault(); cancelDrag(type); const file = e.dataTransfer.files[0]; if (file) processFile(file, type); }
+    function handleFileSelected(e, type) { const file = e.target.files[0]; if (file) processFile(file, type); }
+    function resetTrackerUI(type) {
+      document.getElementById(`${type}-drop`).classList.remove('hidden');
+      document.getElementById(`${type}-tracker`).classList.add('hidden');
+      state[type] = { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null, workbook: null, sheetNames: [], currentSheet: null };
+      checkShowMapper();
+    }
+
+    async function processFile(file, type) {
+      const startRow = parseInt(document.getElementById(`${type}-start-row`).value) || 1;
+      document.getElementById(`${type}-drop`).classList.add('hidden');
+      document.getElementById(`${type}-tracker`).classList.remove('hidden');
+      document.getElementById(`${type}-filename`).textContent = file.name;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const sheetNames = workbook.SheetNames || [];
+          const firstSheet = sheetNames[0];
+          const rawGrid = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1, defval: "" });
+          
+          state[type] = { ...state[type], workbook, sheetNames, currentSheet: firstSheet, rawGrid, rawHeaders: rawGrid[startRow - 1] || [], rawRows: rawGrid.slice(startRow) };
+          
+          const sheetContainer = document.getElementById(`${type}-sheet-container`);
+          if (sheetNames.length > 1) {
+            sheetContainer.classList.remove('hidden');
+            sheetContainer.innerHTML = `
+              <div class="flex flex-col"><label class="text-[10px] font-black text-slate-500 uppercase">Select Sheet</label><span class="text-[10px] font-bold text-blue-600">${sheetNames.length} found</span></div>
+              <select onchange="handleSheetChange(this.value, '${type}')" class="border border-slate-200 rounded text-[11px] p-1 font-bold bg-white max-w-[150px] truncate">
+                ${sheetNames.map(name => `<option value="${name}">${name}</option>`).join('')}
+              </select>`;
+          } else sheetContainer.classList.add('hidden');
+
+          autoMapFields(type);
+          checkShowMapper();
+        } catch (err) { alert(`Error: ${err.message}`); resetTrackerUI(type); }
       };
-
       reader.readAsArrayBuffer(file);
     }
 
-    // Process & Slices rows based on StartRow selection
-    function reprocessLoadedFile(side) {
-      const rawRows = state[side].rawGrid;
-      if (!rawRows || rawRows.length === 0) return;
+    function handleSheetChange(sheetName, type) {
+      const sheet = state[type].workbook.Sheets[sheetName];
+      state[type].currentSheet = sheetName;
+      state[type].rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      reprocessFile(type);
+    }
 
-      const startRowSel = document.getElementById(`${side}-start-row`);
-      const startRowVal = parseInt(startRowSel ? startRowSel.value : '1', 10);
-      const headerIdx = startRowVal - 1;
+    function reprocessFile(type) {
+      const startRow = parseInt(document.getElementById(`${type}-start-row`).value) || 1;
+      state[type].rawHeaders = state[type].rawGrid[startRow - 1] || [];
+      state[type].rawRows = state[type].rawGrid.slice(startRow);
+      autoMapFields(type);
+      if (!document.getElementById('field-mapper-container').classList.contains('hidden')) renderMappingUI();
+    }
 
-      const headers = (rawRows[headerIdx] || []).map(h => String(h ?? '').trim()).filter(Boolean);
-      const rows = [];
-
-      for (let r = startRowVal; r < rawRows.length; r++) {
-        const rowData = rawRows[r];
-        const obj = {};
-        let hasTrueData = false;
-
-        headers.forEach((h, index) => {
-          const val = rowData[index];
-          obj[h] = val ?? '';
-          if (val !== '' && val !== null && val !== undefined) hasTrueData = true;
-        });
-
-        if (hasTrueData) rows.push(obj);
-      }
-
-      state[side].rawHeaders = headers;
-      state[side].rawRows = rows;
-      
-      // Auto-detect mappings but preserve existing valid inputs
-      const freshMap = runAutoDetection(headers);
-      const updatedMap = {};
-      Object.keys(COLS_DEFINITION).forEach(k => {
-        const prev = state[side].mapping[k];
-        if (prev && headers.includes(prev)) {
-          updatedMap[k] = prev;
-        } else {
-          updatedMap[k] = freshMap[k] || '';
-        }
+    function autoMapFields(type) {
+      const headers = state[type].rawHeaders.map(h => String(h).toLowerCase().trim());
+      const mapping = {};
+      FIELDS.forEach(field => {
+        const index = headers.findIndex(h => field.keywords.some(k => h.includes(k)));
+        if (index !== -1) mapping[field.id] = index;
       });
-      state[side].mapping = updatedMap;
-
-      renderMappingTables(side);
-      evaluateActivation();
+      state[type].mapping = mapping;
     }
 
-    function handleStandaloneSheetChange(sheetName, side) {
-      const workbook = state[side].workbook;
-      if (!workbook) return;
-
-      try {
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) return;
-        const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-
-        if (rawRows.length === 0) {
-          alert('This sheet inside the workbook is empty');
-          return;
-        }
-
-        state[side].rawGrid = rawRows;
-        state[side].currentSheet = sheetName;
-
-        const startRowSel = document.getElementById(`${side}-start-row`);
-        if (startRowSel) {
-          startRowSel.value = '1';
-        }
-
-        reprocessLoadedFile(side);
-        state.results = null;
-      } catch (err) {
-        alert(`Error changing sheet: ${err.message || err}`);
-      }
+    function checkShowMapper() {
+      const show = state.books.rawHeaders.length > 0 && state.gstr2b.rawHeaders.length > 0;
+      document.getElementById('mapper-trigger-btn').classList.toggle('hidden', !show);
+      document.getElementById('field-mapper-container').classList.toggle('hidden', !show);
+      if (show) renderMappingUI();
     }
 
-    function removeAttachedFile(side) {
-      state[side].rawHeaders = [];
-      state[side].rawRows = [];
-      state[side].mapping = {};
-      state[side].processed = [];
-      state[side].rawGrid = null;
-      state[side].workbook = null;
-      state[side].sheetNames = [];
-      state[side].currentSheet = '';
-      state.results = null;
-
-      resetTrackerUI(side);
-      evaluateActivation();
-    }
-
-    function resetTrackerUI(side) {
-      const emoji = side === 'books' ? '📊' : '🧾';
-      const labelDesc = side === 'books' ? 'Drop Purchase Register here' : 'Drop GSTR-2B Download here';
-      
-      document.getElementById(`${side}-file-input`).value = '';
-      document.getElementById(`${side}-upload-indicator`).innerHTML = `
-        <span class="text-3xl block">${emoji}</span>
-        <p class="text-sm font-bold text-slate-700">${labelDesc}</p>
-        <p class="text-xs text-slate-500 font-medium">or click to choose Excel file (.xlsx, .xls, .csv)</p>
-      `;
-
-      const sheetContainer = document.getElementById(`${side}-sheet-container`);
-      if (sheetContainer) {
-        sheetContainer.classList.add('hidden');
-        sheetContainer.innerHTML = '';
-      }
-
-      document.getElementById('dashboard-metrics-container').classList.add('hidden');
-      document.getElementById('app-landing-instructions').classList.remove('hidden');
-    }
-
-    function renderMappingTables(side) {
-      const parent = document.getElementById(`${side}-mapper-fields`);
-      const headers = state[side].rawHeaders;
-      const currentMap = state[side].mapping;
-
-      parent.innerHTML = Object.entries(COLS_DEFINITION).map(([k, label]) => `
-        <div class="flex items-center justify-between gap-3 bg-white px-3 py-2 rounded-lg border border-slate-200 text-xs shadow-sm">
-          <label class="font-bold text-slate-650 w-1/3 truncate" title="${label}">${label}</label>
-          <select onchange="updateMappingValue('${side}', '${k}', this.value)"
-                  class="w-2/3 max-w-xs p-1 px-1.5 border border-slate-300 rounded text-xs text-slate-750 font-medium bg-slate-50 focus:bg-white focus:outline-none">
-            <option value="">-- Ignore --</option>
-            ${headers.map(h => `<option value="${escapeString(h)}" ${currentMap[k] === h ? 'selected' : ''}>${escapeString(h)}</option>`).join('')}
-          </select>
-        </div>
-      `).join('');
-    }
-
-    function updateMappingValue(side, fieldKey, val) {
-      state[side].mapping[fieldKey] = val || undefined;
-    }
-
-    let mapperExpanded = false;
     function toggleFieldMapper() {
-      mapperExpanded = !mapperExpanded;
-      document.getElementById('field-mapper').classList.toggle('hidden', !mapperExpanded);
-      document.getElementById('mapper-angle').textContent = mapperExpanded ? '▲' : '▼';
+      const container = document.getElementById('field-mapper-container');
+      container.classList.toggle('hidden');
+      document.getElementById('mapper-angle').textContent = container.classList.contains('hidden') ? '▼' : '▲';
     }
 
-    function evaluateActivation() {
-      const isReady = state.books.rawRows.length > 0 && state.gstr2b.rawRows.length > 0;
-      document.getElementById('run-reconcile-btn').disabled = !isReady;
-    }
-
-    // Mapping rows algorithm
-    function extractStructuredRows(rows, mapping) {
-      return rows.map((r, idx) => {
-        let invNo = mapping.invoiceNo ? String(r[mapping.invoiceNo] ?? '').trim() : '';
-        if (mapping.invoiceNo && !invNo) return null; 
-        if (!invNo) invNo = `Row-${idx + 1}`;
-
-        const igst = mapping.igst ? parseNumericString(r[mapping.igst]) : 0;
-        const cgst = mapping.cgst ? parseNumericString(r[mapping.cgst]) : 0;
-        const sgst = mapping.sgst ? parseNumericString(r[mapping.sgst]) : 0;
-        const totalGstInCol = mapping.totalGst ? parseNumericString(r[mapping.totalGst]) : 0;
-
-        const supplierName = mapping.supplierName && r[mapping.supplierName] ? String(r[mapping.supplierName]).trim() : null;
-
-        const normInValue = normalizeInvoiceNo(invNo);
-        const normNameValue = normalizePartyName(supplierName);
-        const nameWordTokens = new Set(normNameValue ? normNameValue.split(' ').filter(word => word.length > 1) : []);
-
-        return {
-          supplierName,
-          gstin: mapping.gstin && r[mapping.gstin] ? String(r[mapping.gstin]).trim() : null,
-          invoiceNo: invNo,
-          invoiceDate: mapping.invoiceDate && r[mapping.invoiceDate] ? parseNumericExcelDate(r[mapping.invoiceDate]) : null,
-          taxableValue: mapping.taxableValue ? parseNumericString(r[mapping.taxableValue]) : 0,
-          igst,
-          cgst,
-          sgst,
-          totalGst: totalGstInCol > 0 ? totalGstInCol : igst + cgst + sgst,
-          _normInv: normInValue,
-          _normName: normNameValue,
-          _nameWords: nameWordTokens
-        };
-      }).filter(Boolean);
-    }
-
-    // Reconcile processing dispatcher
-    async function startMatchingProcess() {
-      document.getElementById('run-reconcile-btn').disabled = true;
-      document.getElementById('prog-wrap').classList.remove('hidden');
-
-      setEngineProgress(10, "Mapping Excel row boundaries...");
-      await new Promise(r => setTimeout(r, 100));
-
-      const books = extractStructuredRows(state.books.rawRows, state.books.mapping);
-      const gstr2b = extractStructuredRows(state.gstr2b.rawRows, state.gstr2b.mapping);
-
-      setEngineProgress(35, "Running multi-tier fallback alignment algorithms...");
-      await new Promise(r => setTimeout(r, 100));
-
-      const matchingMode = document.getElementById('matching-mode').value;
-      const matched = [];
-      const amountDiffers = [];
-      const usedB = new Set();
-      const usedG = new Set();
-
-      let tiersSelected = [];
-      if (matchingMode === 'auto') {
-        tiersSelected = [1, 2, 3, 4, 5];
-      } else if (matchingMode === 'tier1') {
-        tiersSelected = [1];
-      } else if (matchingMode === 'tier2') {
-        tiersSelected = [2];
-      } else if (matchingMode === 'tier3') {
-        tiersSelected = [3];
-      } else if (matchingMode === 'tier4') {
-        tiersSelected = [4];
-      } else {
-        tiersSelected = [5];
-      }
-
-      let runs = 0;
-      const scopeLength = tiersSelected.length * books.length;
-
-      for (const tier of tiersSelected) {
-        for (let b = 0; b < books.length; b++) {
-          if (usedB.has(b)) continue;
-          const bRow = books[b];
-
-          runs++;
-          if (runs % 200 === 0) {
-            const calculatedPercent = Math.floor((runs / scopeLength) * 50);
-            setEngineProgress(35 + calculatedPercent, `Comparing fallbacks (Pass ${tier})...`);
-            await new Promise(r => setTimeout(r, 1));
-          }
-
-          let bestGIndex = -1;
-          let bestSimValue = -1;
-          let bestTaxMatch = false;
-
-          for (let g = 0; g < gstr2b.length; g++) {
-            if (usedG.has(g)) continue;
-            const gRow = gstr2b[g];
-
-            const approxTaxValueOk = Math.abs(bRow.taxableValue - gRow.taxableValue) <= 1.50;
-
-            let nameOk = false;
-            let simCoeff = 0;
-            if (bRow._normName && gRow._normName) {
-              if (bRow._normName === gRow._normName) {
-                simCoeff = 1.0;
-                nameOk = true;
-              } else {
-                simCoeff = assessNameSimilarity(bRow._nameWords, gRow._nameWords);
-                nameOk = simCoeff >= 0.45;
-              }
-            }
-
-            const datesOk = !!(bRow.invoiceDate && gRow.invoiceDate && bRow.invoiceDate === gRow.invoiceDate);
-            
-            const isDummyB = bRow.invoiceNo.startsWith('Row-');
-            const isDummyG = gRow.invoiceNo.startsWith('Row-');
-            const invNoOk = (!isDummyB && !isDummyG && testInvoiceSlidings(bRow._normInv, gRow._normInv));
-
-            let holdsMatch = false;
-            if (tier === 1 && approxTaxValueOk && nameOk && datesOk) holdsMatch = true;
-            else if (tier === 2 && approxTaxValueOk && nameOk) holdsMatch = true;
-            else if (tier === 3 && approxTaxValueOk && datesOk) holdsMatch = true;
-            else if (tier === 4 && invNoOk && approxTaxValueOk) holdsMatch = true;
-            else if (tier === 5 && invNoOk) holdsMatch = true;
-
-            if (holdsMatch) {
-              if (simCoeff >= bestSimValue) {
-                bestSimValue = simCoeff;
-                bestGIndex = g;
-                bestTaxMatch = approxTaxValueOk;
-              }
-            }
-          }
-
-          if (bestGIndex !== -1) {
-            usedB.add(b);
-            usedG.add(bestGIndex);
-            
-            const gRow = gstr2b[bestGIndex];
-            const approxGstOk = Math.abs(bRow.totalGst - gRow.totalGst) <= 1.50;
-
-            if (bestTaxMatch && approxGstOk) {
-              matched.push({ books: bRow, gstr2b: gRow, nameSim: bestSimValue, tier });
-            } else {
-              amountDiffers.push({
-                books: bRow,
-                gstr2b: gRow,
-                nameSim: bestSimValue,
-                tier,
-                taxDiff: gRow.taxableValue - bRow.taxableValue,
-                gstDiff: gRow.totalGst - bRow.totalGst
-              });
-            }
-          }
-        }
-      }
-
-      const notIn2B = [];
-      const notInBooks = [];
-
-      for (let b = 0; b < books.length; b++) {
-        if (!usedB.has(b)) notIn2B.push(books[b]);
-      }
-
-      for (let g = 0; g < gstr2b.length; g++) {
-        if (!usedG.has(g)) notInBooks.push(gstr2b[g]);
-      }
-
-      state.results = { matched, amountDiffers, notIn2B, notInBooks };
-
-      setEngineProgress(85, "Evaluating analytical sheets...");
-      await new Promise(r => setTimeout(r, 100));
-
-      calculateWorkingPaperSummary(books, gstr2b, state.results);
-
-      setEngineProgress(100, "Done!");
-      await new Promise(r => setTimeout(r, 150));
-
-      document.getElementById('prog-wrap').classList.add('hidden');
-      document.getElementById('run-reconcile-btn').disabled = false;
-      document.getElementById('runtime-controls').classList.remove('hidden');
-
-      renderVisualizationDashboard();
-    }
-
-    function setEngineProgress(pct, label) {
-      document.getElementById('prog-fill').style.width = pct + '%';
-      document.getElementById('prog-pct').textContent = pct + '%';
-      document.getElementById('prog-lbl').textContent = label;
-    }
-
-    function calculateWorkingPaperSummary(books, gstr2b, results) {
-      const sum = list => ({
-        tv: list.reduce((a, x) => a + x.taxableValue, 0),
-        ig: list.reduce((a, x) => a + x.igst, 0),
-        cg: list.reduce((a, x) => a + x.cgst, 0),
-        sg: list.reduce((a, x) => a + x.sgst, 0)
+    function renderMappingUI() {
+      ['books', 'gstr2b'].forEach(type => {
+        const list = document.getElementById(`${type}-mapping-list`);
+        list.innerHTML = `<p class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-tighter">${state.sourceNames[type]} COLUMNS</p>`;
+        FIELDS.forEach(field => {
+          const currentVal = state[type].mapping[field.id];
+          list.innerHTML += `
+            <div class="flex items-center justify-between gap-4">
+              <label class="text-[11px] font-bold text-slate-600 truncate">${field.label}</label>
+              <select onchange="state['${type}'].mapping['${field.id}'] = this.value === '' ? undefined : parseInt(this.value)" 
+                      class="text-[11px] font-semibold bg-white border border-slate-200 rounded-lg px-2 py-1.5 w-48">
+                <option value="">-- Not Mapped --</option>
+                ${state[type].rawHeaders.map((h, idx) => `<option value="${idx}" ${idx === currentVal ? 'selected' : ''}>Col ${idx + 1}: ${h}</option>`).join('')}
+              </select>
+            </div>`;
+        });
       });
+    }
 
-      const bt = sum(books);
-      const gt = sum(gstr2b);
-      const nib = sum(results.notInBooks);
-      const ni2b = sum(results.notIn2B);
+    function runReconciliation() {
+      document.getElementById('processing-overlay').classList.remove('hidden');
+      setTimeout(() => {
+        try {
+          const pb = processSourceData('books');
+          const pg = processSourceData('gstr2b');
+          const res = { matched: [], amountDiffers: [], notIn2B: [], notInBooks: [] };
+          const matchedGstrIndices = new Set();
 
-      const adBooks = sum(results.amountDiffers.map(r => r.books));
-      const ad2B = sum(results.amountDiffers.map(r => r.gstr2b));
-      
-      const adj = {
-        tv: ad2B.tv - adBooks.tv,
-        ig: ad2B.ig - adBooks.ig,
-        cg: ad2B.cg - adBooks.cg,
-        sg: ad2B.sg - adBooks.sg
+          pb.forEach(b => {
+            const cleanB = String(b.invoiceNo).replace(/[^a-zA-Z0-9]/g, '').toLowerCase().replace(/^0+/, '');
+            const candidates = pg.filter((g, idx) => !matchedGstrIndices.has(idx) && String(g.invoiceNo).replace(/[^a-zA-Z0-9]/g, '').toLowerCase().replace(/^0+/, '') === cleanB);
+
+            if (candidates.length > 0) {
+              let match = candidates.find(g => String(b.gstin).toLowerCase() === String(g.gstin).toLowerCase()) || candidates[0];
+              const bestMatchIdx = pg.indexOf(match);
+              matchedGstrIndices.add(bestMatchIdx);
+
+              const taxDiff = Math.abs(b.taxableValue - match.taxableValue);
+              const gstDiff = Math.abs(b.totalGst - match.totalGst);
+
+              if (taxDiff < 1.01 && gstDiff < 1.01) res.matched.push({ books: b, gstr2b: match });
+              else res.amountDiffers.push({ books: b, gstr2b: match, taxDiff: match.taxableValue - b.taxableValue, gstDiff: match.totalGst - b.totalGst });
+            } else res.notIn2B.push(b);
+          });
+
+          pg.forEach((g, idx) => { if (!matchedGstrIndices.has(idx)) res.notInBooks.push(g); });
+
+          state.results = res;
+          calculateSummary();
+          renderResults();
+          document.getElementById('results-viewport').classList.remove('hidden');
+          document.getElementById('runtime-controls').classList.remove('hidden');
+          window.scrollTo({ top: document.getElementById('results-viewport').offsetTop - 20, behavior: 'smooth' });
+        } catch (err) { console.error(err); alert("Reconciliation error. Check mappings."); }
+        finally { document.getElementById('processing-overlay').classList.add('hidden'); }
+      }, 800);
+    }
+
+    function processSourceData(type) {
+      const mapping = state[type].mapping;
+      return state[type].rawRows.filter(row => row[mapping.invoiceNo]).map(row => {
+        const getVal = (fid) => {
+          const idx = mapping[fid];
+          if (idx === undefined) return 0;
+          const val = row[idx];
+          return typeof val === 'number' ? val : (parseFloat(String(val).replace(/,/g, '')) || 0);
+        };
+        const t = getVal('taxableValue'), i = getVal('igst'), c = getVal('cgst'), s = getVal('sgst');
+        return { supplierName: row[mapping.supplierName] || "Unknown", gstin: row[mapping.gstin] || "N/A", invoiceNo: row[mapping.invoiceNo], invoiceDate: row[mapping.invoiceDate] instanceof Date ? row[mapping.invoiceDate].toLocaleDateString('en-IN') : String(row[mapping.invoiceDate] || "N/A"), taxableValue: t, igst: i, cgst: c, sgst: s, totalGst: i + c + s };
+      });
+    }
+
+    function calculateSummary() {
+      const res = state.results;
+      const sum = (arr, key, subKey) => arr.reduce((a, b) => a + (subKey ? b[subKey][key] : b[key]), 0);
+
+      const booksTotal = {
+        tv: sum(res.matched, 'taxableValue', 'books') + sum(res.amountDiffers, 'taxableValue', 'books') + sum(res.notIn2B, 'taxableValue'),
+        ig: sum(res.matched, 'igst', 'books') + sum(res.amountDiffers, 'igst', 'books') + sum(res.notIn2B, 'igst'),
+        cg: sum(res.matched, 'cgst', 'books') + sum(res.amountDiffers, 'cgst', 'books') + sum(res.notIn2B, 'cgst'),
+        sg: sum(res.matched, 'sgst', 'books') + sum(res.amountDiffers, 'sgst', 'books') + sum(res.notIn2B, 'sgst')
       };
 
-      const calc = {
-        tv: bt.tv + nib.tv + adj.tv - ni2b.tv,
-        ig: bt.ig + nib.ig + adj.ig - ni2b.ig,
-        cg: bt.cg + nib.cg + adj.cg - ni2b.cg,
-        sg: bt.sg + nib.sg + adj.sg - ni2b.sg
+      const gstrTotal = {
+        tv: sum(res.matched, 'taxableValue', 'gstr2b') + sum(res.amountDiffers, 'taxableValue', 'gstr2b') + sum(res.notInBooks, 'taxableValue'),
+        ig: sum(res.matched, 'igst', 'gstr2b') + sum(res.amountDiffers, 'igst', 'gstr2b') + sum(res.notInBooks, 'igst'),
+        cg: sum(res.matched, 'cgst', 'gstr2b') + sum(res.amountDiffers, 'cgst', 'gstr2b') + sum(res.notInBooks, 'cgst'),
+        sg: sum(res.matched, 'sgst', 'gstr2b') + sum(res.amountDiffers, 'sgst', 'gstr2b') + sum(res.notInBooks, 'sgst')
       };
 
-      const diff = {
-        tv: calc.tv - gt.tv,
-        ig: calc.ig - gt.ig,
-        cg: calc.cg - gt.cg,
-        sg: calc.sg - gt.sg
+      const portalHigher = {
+        tv: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.gstr2b.taxableValue - b.books.taxableValue), 0),
+        ig: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.gstr2b.igst - b.books.igst), 0),
+        cg: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.gstr2b.cgst - b.books.cgst), 0),
+        sg: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.gstr2b.sgst - b.books.sgst), 0)
+      };
+
+      const booksHigher = {
+        tv: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.books.taxableValue - b.gstr2b.taxableValue), 0),
+        ig: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.books.igst - b.gstr2b.igst), 0),
+        cg: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.books.cgst - b.gstr2b.cgst), 0),
+        sg: res.amountDiffers.reduce((a, b) => a + Math.max(0, b.books.sgst - b.gstr2b.sgst), 0)
       };
 
       state.summary = [
-        { label: "Input invoices as per accounts (Books)", ...bt },
-        { label: "Input invoices in 2B not in accounts (Missing in Books)", ...nib },
-        { label: "Amount Difference in Accounts (GSTR-2B higher)", ...adj },
-        { label: "Input invoices in accounts not in 2B (Missing in 2B)", ...ni2b },
-        { label: "Input invoices as per calculation (Reconciled)", ...calc },
-        { label: "Input invoices as per 2B (Actual Portal Total)", ...gt },
-        { label: "Difference (Calculated vs GSTR-2B)", ...diff }
+        { label: `Input invoices as per accounts (${state.sourceNames.books})`, ...booksTotal, type: 'header' },
+        { label: "Add:", type: 'subheader' },
+        { label: `• Input invoices in ${state.sourceNames.gstr2b} not in accounts`, tv: sum(res.notInBooks, 'taxableValue'), ig: sum(res.notInBooks, 'igst'), cg: sum(res.notInBooks, 'cgst'), sg: sum(res.notInBooks, 'sgst'), indent: true },
+        { label: "• Reverse Charge (Inward RCM)", tv: 0, ig: 0, cg: 0, sg: 0, indent: true },
+        { label: "• Expenses / Other capital credits", tv: 0, ig: 0, cg: 0, sg: 0, indent: true },
+        { label: "• Amount Difference in Accounts (Portal higher)", ...portalHigher, indent: true },
+        { label: "Less:", type: 'subheader' },
+        { label: `• Input invoices in accounts not in ${state.sourceNames.gstr2b}`, tv: sum(res.notIn2B, 'taxableValue'), ig: sum(res.notIn2B, 'igst'), cg: sum(res.notIn2B, 'cgst'), sg: sum(res.notIn2B, 'sgst'), indent: true },
+        { label: "• Amount Difference in Accounts (Books higher)", ...booksHigher, indent: true },
+        { label: "• Input invoice amended / credits reversed", tv: 0, ig: 0, cg: 0, sg: 0, indent: true },
+        { label: "Input invoices as per calculation (Reconciled)", 
+          tv: booksTotal.tv + sum(res.notInBooks, 'taxableValue') + portalHigher.tv - sum(res.notIn2B, 'taxableValue') - booksHigher.tv,
+          ig: booksTotal.ig + sum(res.notInBooks, 'igst') + portalHigher.ig - sum(res.notIn2B, 'igst') - booksHigher.ig,
+          cg: booksTotal.cg + sum(res.notInBooks, 'cgst') + portalHigher.cg - sum(res.notIn2B, 'cgst') - booksHigher.cg,
+          sg: booksTotal.sg + sum(res.notInBooks, 'sgst') + portalHigher.sg - sum(res.notIn2B, 'sgst') - booksHigher.sg,
+          type: 'total' },
+        { label: `Input invoices as per ${state.sourceNames.gstr2b} (Actual Total)`, ...gstrTotal, type: 'total' },
+        { label: "Difference (Calculated vs Portal)", 
+          tv: (booksTotal.tv + sum(res.notInBooks, 'taxableValue') + portalHigher.tv - sum(res.notIn2B, 'taxableValue') - booksHigher.tv) - gstrTotal.tv,
+          ig: (booksTotal.ig + sum(res.notInBooks, 'igst') + portalHigher.ig - sum(res.notIn2B, 'igst') - booksHigher.ig) - gstrTotal.ig,
+          cg: (booksTotal.cg + sum(res.notInBooks, 'cgst') + portalHigher.cg - sum(res.notIn2B, 'cgst') - booksHigher.cg) - gstrTotal.cg,
+          sg: (booksTotal.sg + sum(res.notInBooks, 'sgst') + portalHigher.sg - sum(res.notIn2B, 'sgst') - booksHigher.sg) - gstrTotal.sg,
+          type: 'diff' }
       ];
     }
 
-    // Dashboard Visualization rendering
-    function renderVisualizationDashboard() {
-      document.getElementById('app-landing-instructions').classList.add('hidden');
-      document.getElementById('dashboard-metrics-container').classList.remove('hidden');
+    function renderResults() {
+      const res = state.results, tc = res.matched.length + res.amountDiffers.length + res.notIn2B.length + res.notInBooks.length;
+      document.getElementById('stat-total-count').textContent = tc;
+      document.getElementById('stat-matched-count').textContent = res.matched.length;
+      document.getElementById('stat-matched-pct').textContent = tc ? Math.round((res.matched.length / tc) * 100) + '%' : '0%';
+      document.getElementById('stat-diff-count').textContent = res.amountDiffers.length;
+      document.getElementById('stat-missing-count').textContent = res.notIn2B.length + res.notInBooks.length;
+      document.getElementById('tab-books-only-btn').textContent = `📕 MISSING IN ${state.sourceNames.gstr2b.toUpperCase()}`;
+      document.getElementById('tab-gstr-only-btn').textContent = `📘 MISSING IN ${state.sourceNames.books.toUpperCase()}`;
+      renderSummary(); renderChart();
+      renderDataTable('matched', res.matched, true);
+      renderDataTable('diff', res.amountDiffers, true, true);
+      renderDataTable('books-only', res.notIn2B, false);
+      renderDataTable('gstr-only', res.notInBooks, false);
+    }
 
-      const results = state.results;
-      const totalBooksCount = state.books.rawRows.length;
-      const total2bCount = state.gstr2b.rawRows.length;
-
-      const totalMatchedITC = results.matched.reduce((acc, m) => acc + m.books.totalGst, 0);
-      const totalBooksValue = state.books.rawRows.reduce((a, r) => a + parseNumericString(r[state.books.mapping.taxableValue]), 0);
-      const totalPortalValue = state.gstr2b.rawRows.reduce((a, r) => a + parseNumericString(r[state.gstr2b.mapping.taxableValue]), 0);
-
-      // Populate Metric grid Cards
-      const parentGrid = document.getElementById('stat-grid-row');
-      const cards = [
-        { label: "Invoices in Books", val: totalBooksCount, text: formatShortK(totalBooksValue) + " taxable", emoji: "📚", bg: "bg-blue-50 border-blue-200" },
-        { label: "Invoices in 2B", val: total2bCount, text: formatShortK(totalPortalValue) + " taxable", emoji: "📋", bg: "bg-purple-50 border-purple-200" },
-        { label: "Fully Matched Invoices", val: results.matched.length, text: (totalBooksCount > 0 ? ((results.matched.length / totalBooksCount) * 100).toFixed(1) : 0) + "% match rate", emoji: "✅", bg: "bg-emerald-50 border-emerald-200 text-emerald-800" },
-        { label: "Matched Eligible ITC", val: formatShortK(totalMatchedITC), text: "Claimable immediately", emoji: "💎", bg: "bg-indigo-50 border-indigo-200" }
-      ];
-
-      parentGrid.innerHTML = cards.map(c => `
-        <div class="bg-white border rounded-xl p-4 flex items-start gap-3 shadow-sm ${c.bg}">
-          <span class="p-2 rounded bg-white text-base shadow-sm shrink-0">${c.emoji}</span>
-          <div>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">${c.label}</p>
-            <p class="text-lg font-black text-slate-900 mt-0.5">${c.val}</p>
-            <p class="text-[10px] text-slate-500 font-semibold mt-0.5">${c.text}</p>
-          </div>
-        </div>
-      `).join('');
-
-      // Populate filter selection
-      const vendorDrop = document.getElementById('recon-vendor-filter');
-      const uniqueNames = new Set();
-      results.matched.forEach(item => { if (item.books.supplierName) uniqueNames.add(item.books.supplierName); });
-      results.amountDiffers.forEach(item => { if (item.books.supplierName) uniqueNames.add(item.books.supplierName); });
-      results.notIn2B.forEach(item => { if (item.supplierName) uniqueNames.add(item.supplierName); });
-      results.notInBooks.forEach(item => { if (item.supplierName) uniqueNames.add(item.supplierName); });
-
-      vendorDrop.innerHTML = '<option value="">-- All Suppliers --</option>' + 
-        Array.from(uniqueNames).sort().map(name => `<option value="${escapeString(name)}">${escapeString(name)}</option>`).join('');
-
-      // Charting implementations
-      state.chartInstances.forEach(c => c.destroy());
-      state.chartInstances = [];
-
-      // Donut Chart
-      const statusCtx = document.getElementById('status-donut-canvas').getContext('2d');
-      const donutChart = new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Fully Matched', 'Amount Differs', 'Missing in 2B', 'Missing in Books'],
-          datasets: [{
-            data: [results.matched.length, results.amountDiffers.length, results.notIn2B.length, results.notInBooks.length],
-            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#f97316'],
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' } } }
-          },
-          cutout: '60%'
-        }
+    function renderSummary() {
+      const tbody = document.getElementById('summary-body'); tbody.innerHTML = '';
+      state.summary.forEach(s => {
+        const tr = document.createElement('tr');
+        if (s.type === 'header') tr.className = 'summary-section';
+        else if (s.type === 'total') tr.className = 'summary-total';
+        else if (s.type === 'diff') tr.className = 'summary-diff';
+        else if (s.indent) tr.className = 'summary-indent';
+        const f = (v) => s.type === 'subheader' ? '' : v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        tr.innerHTML = `<td>${s.label}</td><td class="text-right">${f(s.tv || 0)}</td><td class="text-right">${f(s.ig || 0)}</td><td class="text-right">${f(s.cg || 0)}</td><td class="text-right">${f(s.sg || 0)}</td>`;
+        tbody.appendChild(tr);
       });
-
-      // Group totals comparisons Chart
-      const barCtx = document.getElementById('val-bar-canvas').getContext('2d');
-      const barChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-          labels: ['IGST', 'CGST', 'SGST'],
-          datasets: [
-            {
-              label: 'Books',
-              data: [state.summary[0].ig, state.summary[0].cg, state.summary[0].sg],
-              backgroundColor: '#3b82f6',
-              borderRadius: 4
-            },
-            {
-              label: 'Portal (2B)',
-              data: [state.summary[5].ig, state.summary[5].cg, state.summary[5].sg],
-              backgroundColor: '#10b981',
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' } } }
-          },
-          scales: {
-            y: { ticks: { callback: value => formatShortK(value) } }
-          }
-        }
-      });
-
-      state.chartInstances.push(donutChart, barChart);
-
-      // Tab counters indices
-      document.getElementById('lbl-c-matched').textContent = results.matched.length;
-      document.getElementById('lbl-c-amtdiff').textContent = results.amountDiffers.length;
-      document.getElementById('lbl-c-ni2b').textContent = results.notIn2B.length;
-      document.getElementById('lbl-c-nib').textContent = results.notInBooks.length;
-
-      applyFilters();
     }
 
-    function switchTab(tabId, el) {
-      state.activeTab = tabId;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      el.classList.add('active');
-
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
-      
-      const paneMap = {
-        matched: 'tab-viewport-matched',
-        amtdiff: 'tab-viewport-amtdiff',
-        notIn2B: 'tab-viewport-notIn2B',
-        notInBooks: 'tab-viewport-notInBooks',
-        recosheet: 'tab-viewport-recosheet'
-      };
-
-      document.getElementById(paneMap[tabId]).classList.remove('hidden');
-
-      if (tabId === 'recosheet') {
-        document.getElementById('table-search-panel').classList.add('hidden');
-      } else {
-        document.getElementById('table-search-panel').classList.remove('hidden');
-      }
+    function renderDataTable(id, data, isComp, isDiff) {
+      const head = document.getElementById(`${id}-header-row`), body = document.getElementById(`${id}-body`);
+      let hs = isComp ? [`Supplier (${state.sourceNames.books})`, 'Inv No', 'Taxable', 'GST', `Supplier (${state.sourceNames.gstr2b})`, 'Inv No', 'Taxable', 'GST'] : ['Supplier Name', 'GSTIN', 'Inv No', 'Date', 'Taxable', 'IGST', 'CGST', 'SGST', 'Total'];
+      if (isDiff) hs.push('Tax Diff', 'GST Diff');
+      head.innerHTML = hs.map(h => `<th>${h}</th>`).join('');
+      body.innerHTML = data.map(item => {
+        let cs = isComp ? [item.books.supplierName, item.books.invoiceNo, item.books.taxableValue.toFixed(2), item.books.totalGst.toFixed(2), item.gstr2b.supplierName, item.gstr2b.invoiceNo, item.gstr2b.taxableValue.toFixed(2), item.gstr2b.totalGst.toFixed(2)] : [item.supplierName, item.gstin, item.invoiceNo, item.invoiceDate, item.taxableValue.toFixed(2), item.igst.toFixed(2), item.cgst.toFixed(2), item.sgst.toFixed(2), item.totalGst.toFixed(2)];
+        if (isDiff) cs.push(`<span class="font-bold ${item.taxDiff !== 0 ? 'text-red-600' : ''}">${item.taxDiff.toFixed(2)}</span>`, `<span class="font-bold ${item.gstDiff !== 0 ? 'text-red-600' : ''}">${item.gstDiff.toFixed(2)}</span>`);
+        return `<tr>${cs.map(c => `<td>${c}</td>`).join('')}</tr>`;
+      }).join('');
     }
 
-    function applyFilters() {
-      const results = state.results;
-      if (!results) return;
-
-      const q = document.getElementById('recon-search-box').value.toLowerCase();
-      const vendorName = document.getElementById('recon-vendor-filter').value;
-
-      // Filter matched items
-      const matchedFiltered = results.matched.filter(item => {
-        const matchesQuery = String(item.books.supplierName || '').toLowerCase().includes(q) ||
-                           String(item.books.invoiceNo || '').toLowerCase().includes(q) ||
-                           String(item.books.gstin || '').toLowerCase().includes(q);
-        const matchesVendor = !vendorName || item.books.supplierName === vendorName;
-        return matchesQuery && matchesVendor;
-      });
-
-      // Filter amount differs items
-      const amtFiltered = results.amountDiffers.filter(item => {
-        const matchesQuery = String(item.books.supplierName || '').toLowerCase().includes(q) ||
-                           String(item.books.invoiceNo || '').toLowerCase().includes(q) ||
-                           String(item.books.gstin || '').toLowerCase().includes(q);
-        const matchesVendor = !vendorName || item.books.supplierName === vendorName;
-        return matchesQuery && matchesVendor;
-      });
-
-      // Filter not in 2b items
-      const ni2bFiltered = results.notIn2B.filter(item => {
-        const matchesQuery = String(item.supplierName || '').toLowerCase().includes(q) ||
-                           String(item.invoiceNo || '').toLowerCase().includes(q) ||
-                           String(item.gstin || '').toLowerCase().includes(q);
-        const matchesVendor = !vendorName || item.supplierName === vendorName;
-        return matchesQuery && matchesVendor;
-      });
-
-      // Filter not in books items
-      const nibFiltered = results.notInBooks.filter(item => {
-        const matchesQuery = String(item.supplierName || '').toLowerCase().includes(q) ||
-                           String(item.invoiceNo || '').toLowerCase().includes(q) ||
-                           String(item.gstin || '').toLowerCase().includes(q);
-        const matchesVendor = !vendorName || item.supplierName === vendorName;
-        return matchesQuery && matchesVendor;
-      });
-
-      renderMatchedViewport(matchedFiltered);
-      renderAmtDiffViewport(amtFiltered);
-      renderSimpleViewport('notIn2B', ni2bFiltered, 'Books Only (No matching entry inside GSTR-2B table)');
-      renderSimpleViewport('notInBooks', nibFiltered, 'GSTR-2B Only (No matching entry loaded in ledger accounts)');
-      renderCalculatorsViewport();
-    }
-
-    function parseMatchTag(tier) {
-      switch(tier) {
-        case 1: return '<span class="match-badge tier-1" title="Tier 1 Exact Match: Taxable + Party Name + Date">✓ Tax+Name+Date</span>';
-        case 2: return '<span class="match-badge tier-3" title="Tier 2 Similar Match: Taxable + Party Name">✓ Tax+Name</span>';
-        case 3: return '<span class="match-badge tier-3" title="Tier 3 Flexible Match: Taxable + Date Match">✓ Tax+Date</span>';
-        case 4: return '<span class="match-badge tier-4" title="Tier 4 Invoice Match: Invoice Identifier + Taxable value">✓ Invoice No</span>';
-        default: return '<span class="match-badge tier-5" title="Tier 5 Invoice fallback match coordinate">✓ Invoice</span>';
-      }
-    }
-
-    function renderMatchedViewport(list) {
-      const container = document.getElementById('tab-viewport-matched');
-      if (list.length === 0) {
-        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No matching records found.</p>';
-        return;
-      }
-
-      const rows = list.map(m => `
-        <tr>
-          <td class="max-w-[170px] truncate font-semibold" title="${escapeString(m.books.supplierName)}">${escapeString(m.books.supplierName || '—')}</td>
-          <td class="font-mono text-xs text-slate-600">${escapeString(m.books.gstin || '—')}</td>
-          <td class="font-bold text-slate-800 flex items-center gap-1">${escapeString(m.books.invoiceNo)} ${parseMatchTag(m.tier)}</td>
-          <td class="text-right tabular-nums text-slate-705 font-medium">${formatIndianCurrency(m.books.taxableValue)}</td>
-          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(m.books.totalGst)}</td>
-          <td class="border-l border-slate-300 max-w-[170px] truncate" title="${escapeString(m.gstr2b.supplierName)}">${escapeString(m.gstr2b.supplierName || '—')}</td>
-          <td class="font-mono text-xs text-slate-600">${escapeString(m.gstr2b.gstin || '—')}</td>
-          <td class="font-bold text-blue-600">${escapeString(m.gstr2b.invoiceNo)}</td>
-          <td class="text-right tabular-nums text-slate-705 font-medium">${formatIndianCurrency(m.gstr2b.taxableValue)}</td>
-          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(m.gstr2b.totalGst)}</td>
-        </tr>
-      `).join('');
-
-      container.innerHTML = `
-        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
-          <table>
-            <thead>
-              <tr>
-                <th colspan="5" class="bg-blue-50 text-blue-800 border-b border-blue-250 text-center font-extrabold text-xs">📖 PURCHASE LEDGER (BOOKS OF ACCOUNT)</th>
-                <th colspan="5" class="bg-emerald-50 text-emerald-800 border-b border-emerald-250 border-l border-slate-300 text-center font-extrabold text-xs">🧾 GSTR-2B AUTO STATEMENT</th>
-              </tr>
-              <tr>
-                <th>Party Name</th>
-                <th>Supplier GSTIN</th>
-                <th>Invoice</th>
-                <th class="text-right">Taxable</th>
-                <th class="text-right">Total GST</th>
-                <th class="border-l border-slate-300">Party Name (2B)</th>
-                <th>GSTIN (2B)</th>
-                <th>Invoice (2B)</th>
-                <th class="text-right">Taxable (2B)</th>
-                <th class="text-right">Total GST (2B)</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function renderAmtDiffViewport(list) {
-      const container = document.getElementById('tab-viewport-amtdiff');
-      if (list.length === 0) {
-        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No amount-variance records found.</p>';
-        return;
-      }
-
-      const rows = list.map(m => `
-        <tr>
-          <td class="max-w-[160px] truncate font-semibold">${escapeString(m.books.supplierName || '—')}</td>
-          <td class="font-bold text-slate-800">${escapeString(m.books.invoiceNo)} ${parseMatchTag(m.tier)}</td>
-          <td class="text-right tabular-nums text-slate-600 font-medium">${formatIndianCurrency(m.books.taxableValue)}</td>
-          <td class="text-right tabular-nums text-slate-700 font-bold">${formatIndianCurrency(m.books.totalGst)}</td>
-          <td class="border-l border-slate-300 font-bold text-blue-600">${escapeString(m.gstr2b.invoiceNo)}</td>
-          <td class="text-right tabular-nums text-slate-600 font-medium">${formatIndianCurrency(m.gstr2b.taxableValue)}</td>
-          <td class="text-right tabular-nums text-slate-700 font-bold">${formatIndianCurrency(m.gstr2b.totalGst)}</td>
-          <td class="border-l border-slate-300 text-right font-black tabular-nums ${m.taxDiff >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${m.taxDiff >= 0 ? '+' : ''}${formatIndianCurrency(m.taxDiff)}</td>
-          <td class="text-right font-black tabular-nums ${m.gstDiff >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${m.gstDiff >= 0 ? '+' : ''}${formatIndianCurrency(m.gstDiff)}</td>
-        </tr>
-      `).join('');
-
-      container.innerHTML = `
-        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
-          <table>
-            <thead>
-              <tr>
-                <th colspan="4" class="bg-blue-50 text-blue-800 border-b border-blue-200 text-center font-bold">📖 BOOKS OF ACCOUNT</th>
-                <th colspan="3" class="bg-emerald-50 text-emerald-800 border-b border-emerald-200 border-l border-slate-300 text-center font-bold">🧾 PORTAL DETAILS</th>
-                <th colspan="2" class="bg-amber-50 text-amber-800 border-b border-amber-200 border-l border-slate-300 text-center font-bold">📊 VARIANCE GAP</th>
-              </tr>
-              <tr>
-                <th>Party Name</th>
-                <th>Invoice</th>
-                <th class="text-right">Taxable</th>
-                <th class="text-right">GST</th>
-                <th class="border-l border-slate-300">Invoice (2B)</th>
-                <th class="text-right">Taxable (2B)</th>
-                <th class="text-right">GST (2B)</th>
-                <th class="border-l border-slate-300 text-right">Taxable Diff</th>
-                <th class="text-right">GST Diff</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function renderSimpleViewport(type, list, subtitle) {
-      const container = document.getElementById(`tab-viewport-${type}`);
-      if (list.length === 0) {
-        container.innerHTML = '<p class="text-xs font-bold text-slate-400 py-6 text-center">No records in this classification.</p>';
-        return;
-      }
-
-      const rows = list.map(item => `
-        <tr>
-          <td class="font-semibold">${escapeString(item.supplierName || '—')}</td>
-          <td class="font-mono text-xs text-slate-600">${escapeString(item.gstin || '—')}</td>
-          <td class="font-bold text-slate-800">${escapeString(item.invoiceNo)}</td>
-          <td>${escapeString(item.invoiceDate || '—')}</td>
-          <td class="text-right tabular-nums text-slate-700 font-medium">${formatIndianCurrency(item.taxableValue)}</td>
-          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.igst)}</td>
-          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.cgst)}</td>
-          <td class="text-right tabular-nums text-slate-600">${formatIndianCurrency(item.sgst)}</td>
-          <td class="text-right tabular-nums text-slate-800 font-bold">${formatIndianCurrency(item.totalGst)}</td>
-        </tr>
-      `).join('');
-
-      container.innerHTML = `
-        <div class="space-y-2">
-          <p class="text-[11px] uppercase font-black text-slate-400 tracking-wider flex items-center gap-1.5">ℹ ${subtitle}</p>
-          <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
-            <table>
-              <thead>
-                <tr>
-                  <th>Supplier Name</th>
-                  <th>GSTIN</th>
-                  <th>Invoice No</th>
-                  <th>Invoice Date</th>
-                  <th class="text-right">Taxable Value</th>
-                  <th class="text-right">IGST</th>
-                  <th class="text-right">CGST</th>
-                  <th class="text-right">SGST</th>
-                  <th class="text-right">Total GST</th>
-                </tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderCalculatorsViewport() {
-      const container = document.getElementById('tab-viewport-recosheet');
-      const sum = state.summary;
-      if (sum.length === 0) return;
-
-      container.innerHTML = `
-        <div class="space-y-4">
-          <div>
-            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">CA Working Paper Reconciliation Worksheet</h3>
-            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Dynamic formulas mock calculations linking totals</p>
-          </div>
-          <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
-            <table>
-              <thead>
-                <tr>
-                  <th>Particulars Description</th>
-                  <th class="text-right">Taxable Value</th>
-                  <th class="text-right">IGST</th>
-                  <th class="text-right">CGST</th>
-                  <th class="text-right">SGST / UTGST</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="summary-section">
-                  <td>${escapeString(sum[0].label)}</td>
-                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].tv)}</td>
-                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].ig)}</td>
-                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].cg)}</td>
-                  <td class="text-right tabular-nums">${formatIndianCurrency(sum[0].sg)}</td>
-                </tr>
-                <tr class="bg-slate-50/20"><td colspan="5" class="py-1 px-4 text-[10px] text-slate-400 font-black tracking-widest">ADDITIONS:</td></tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="pl-6 text-slate-700 font-semibold">• Invoices in GSTR-2B not in accounts (Missing in Books)</td>
-                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[1].tv)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].ig)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].cg)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[1].sg)}</td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="pl-6 text-slate-700 font-semibold">• Amount difference variance (Portal shows higher cost)</td>
-                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[2].tv)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].ig)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].cg)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[2].sg)}</td>
-                </tr>
-                <tr class="bg-slate-50/20"><td colspan="5" class="py-1 px-4 text-[10px] text-slate-400 font-black tracking-widest">SUBTRACTIONS:</td></tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="pl-6 text-slate-700 font-semibold">• Invoices in accounts not in GSTR-2B (Missing in 2B)</td>
-                  <td class="text-right tabular-nums font-bold text-slate-800">${formatIndianCurrency(sum[3].tv)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].ig)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].cg)}</td>
-                  <td class="text-right tabular-nums text-slate-650">${formatIndianCurrency(sum[3].sg)}</td>
-                </tr>
-                <tr class="summary-total">
-                  <td class="text-blue-900 font-black">Reconciled Calculated Input Tax Credit (A)</td>
-                  <td class="text-right tabular-nums text-[12px] font-black">${formatIndianCurrency(sum[4].tv)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].ig)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].cg)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[4].sg)}</td>
-                </tr>
-                <tr class="summary-section">
-                  <td class="text-emerald-900 font-black">GSTR-2B Portal input tax total values (B)</td>
-                  <td class="text-right tabular-nums text-[12px] font-black">${formatIndianCurrency(sum[5].tv)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].ig)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].cg)}</td>
-                  <td class="text-right tabular-nums font-bold">${formatIndianCurrency(sum[5].sg)}</td>
-                </tr>
-                <tr class="summary-diff">
-                  <td class="font-black text-amber-950">Variance Gap Out-of-Balance (A - B)</td>
-                  <td class="text-right tabular-nums text-[12px] font-black ${sum[6].tv !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].tv)}</td>
-                  <td class="text-right tabular-nums font-bold ${sum[6].ig !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].ig)}</td>
-                  <td class="text-right tabular-nums font-bold ${sum[6].cg !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].cg)}</td>
-                  <td class="text-right tabular-nums font-bold ${sum[6].sg !== 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatIndianCurrency(sum[6].sg)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    async function dispatchExport(blob, filename, mimeType, useFileSystem) {
-      const extension = filename.split('.').pop() || 'xlsx';
-      const finalFilename = filename.endsWith(`.${extension}`) ? filename : `${filename}.${extension}`;
-
-      const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-
-      if (useFileSystem && !isIframe && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
-        try {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: finalFilename,
-            types: [{
-              description: 'Document Description Reference Name',
-              accept: { [mimeType]: [`.${extension}`] }
-            }]
-          });
-          const writable = await handle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') {
-            throw err;
-          }
-          console.warn('Native Save File Picker fell back or was blocked in this context:', err);
-        }
-      }
-
-      // Fallback: Dynamic anchor download (Direct Browser Download)
-      if (typeof window !== 'undefined') {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = finalFilename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-        }, 100);
-      }
-    }
-
-    async function exportReconciliationReport(customName, usePicker = false) {
-      if (!state.results) return;
-
-      const wb = XLSX.utils.book_new();
+    function renderChart() {
+      const ctx = document.getElementById('reconChart').getContext('2d'); if (state.chart) state.chart.destroy();
       const res = state.results;
+      state.chart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Matched', 'Variance', `Missing in ${state.sourceNames.gstr2b}`, `Missing in ${state.sourceNames.books}`], datasets: [{ data: [res.matched.length, res.amountDiffers.length, res.notIn2B.length, res.notInBooks.length], backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
+    }
 
-      const N_m = res.matched.length;
-      const N_d = res.amountDiffers.length;
-      const N_ni2b = res.notIn2B.length;
-      const N_nib = res.notInBooks.length;
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === `tab-${tab}-btn`));
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.toggle('hidden', v.id !== `view-${tab}`));
+    }
 
-      // Internal layout styling helper
-      const applyStylesToSheet = (ws, headerRowsCount = 1, isSummary = false) => {
-        if (!ws || !ws['!ref']) return;
+    async function exportReconciliationReport(customName, useFileSystem) {
+      if (!state.results) return;
+      const wb = XLSX.utils.book_new(), res = state.results;
+      const applyStyles = (ws, headerRows = 1, isSummary = false) => {
         const range = XLSX.utils.decode_range(ws['!ref']);
-
-        const colWidths = [];
-        const rowHeights = [];
-
-        for (let C = range.s.c; C <= range.e.c; C++) {
-          colWidths[C] = 11;
-        }
-
-        for (let R = range.s.r; R <= range.e.r; R++) {
-          let height = 21;
-          if (R < headerRowsCount) {
-            height = isSummary && R === 0 ? 32 : 27;
-          } else {
-            const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
-            const firstCell = ws[firstCellRef];
-            if (firstCell && String(firstCell.v).toUpperCase().includes('TOTAL')) {
-              height = 24;
-            }
-          }
-
-          if (isSummary) {
-            if (R === 0) height = 36;
-            else if (R === 1) height = 28;
-            else height = 22;
-          }
-          rowHeights.push({ hpt: height });
-
-          for (let C = range.s.c; C <= range.e.c; C++) {
-            const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-            const cell = ws[cellRef];
-            if (cell) {
-              const isNumeric = cell.t === 'n' || typeof cell.v === 'number';
-              if (isNumeric) {
-                cell.z = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)';
-              }
-
-              let valStr = '';
-              if (cell.v !== undefined && cell.v !== null) {
-                if (typeof cell.v === 'number') {
-                  valStr = cell.v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                } else {
-                  valStr = String(cell.v);
-                }
-              }
-
-              if (valStr.length > colWidths[C]) {
-                colWidths[C] = valStr.length;
-              }
-
-              if (isSummary) {
-                if (R === 0) {
-                  cell.s = {
-                    fill: { fgColor: { rgb: "CBD5E1" } },
-                    font: { bold: true, name: "Calisto MT", sz: 12, color: { rgb: "0F172A" } },
-                    alignment: { horizontal: "center", vertical: "center" },
-                    border: {
-                      top: { style: "thin", color: { rgb: "94A3B8" } },
-                      bottom: { style: "medium", color: { rgb: "475569" } },
-                      left: { style: "thin", color: { rgb: "94A3B8" } },
-                      right: { style: "thin", color: { rgb: "94A3B8" } }
-                    }
-                  };
-                } else if (R === 1) {
-                  cell.s = {
-                    fill: { fgColor: { rgb: "E2E8F0" } },
-                    font: { bold: true, name: "Calisto MT", sz: 10, color: { rgb: "0F172A" } },
-                    alignment: { horizontal: C === 0 ? "left" : "right", vertical: "center" },
-                    border: {
-                      top: { style: "thin", color: { rgb: "94A3B8" } },
-                      bottom: { style: "medium", color: { rgb: "475569" } },
-                      left: { style: "thin", color: { rgb: "CBD5E1" } },
-                      right: { style: "thin", color: { rgb: "CBD5E1" } }
-                    }
-                  };
-                } else {
-                  const isAddOrLessHeader = R === 3 || R === 8;
-                  const isCalculationTotal = R === 11;
-                  const isActualTotal = R === 12;
-                  const isDifference = R === 13;
-
-                  let rowBg = "FFFFFF";
-                  let isBold = false;
-                  let borderStyle = {
-                    top: { style: "thin", color: { rgb: "F1F5F9" } },
-                    bottom: { style: "thin", color: { rgb: "F1F5F9" } },
-                    left: { style: "thin", color: { rgb: "F1F5F9" } },
-                    right: { style: "thin", color: { rgb: "F1F5F9" } }
-                  };
-
-                  if (isAddOrLessHeader) {
-                    isBold = true;
-                    rowBg = "F8FAFC";
-                  } else if (isCalculationTotal) {
-                    isBold = true;
-                    rowBg = "F1F5F9";
-                    borderStyle.top = { style: "thin", color: { rgb: "94A3B8" } };
-                    borderStyle.bottom = { style: "thin", color: { rgb: "94A3B8" } };
-                  } else if (isActualTotal) {
-                    isBold = true;
-                    rowBg = "E2E8F0";
-                    borderStyle.top = { style: "thin", color: { rgb: "475569" } };
-                    borderStyle.bottom = { style: "medium", color: { rgb: "475569" } };
-                  } else if (isDifference) {
-                    isBold = true;
-                    rowBg = "F8FAFC";
-                    borderStyle.top = { style: "thin", color: { rgb: "94A3B8" } };
-                    borderStyle.bottom = { style: "double", color: { rgb: "000000" } };
-                  }
-
-                  cell.s = {
-                    font: { bold: isBold, name: "Calisto MT", sz: (isCalculationTotal || isActualTotal || isDifference) ? 10 : 9 },
-                    fill: { fgColor: { rgb: rowBg } },
-                    alignment: { horizontal: C === 0 ? "left" : "right", vertical: "center" },
-                    border: borderStyle
-                  };
-                }
-              } else {
-                if (R < headerRowsCount) {
-                  cell.s = {
-                    fill: { fgColor: { rgb: "E2E8F0" } },
-                    font: { bold: true, color: { rgb: "0F172A" }, name: "Calisto MT", sz: 10 },
-                    alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                    border: {
-                      top: { style: "thin", color: { rgb: "94A3B8" } },
-                      bottom: { style: "medium", color: { rgb: "94A3B8" } },
-                      left: { style: "thin", color: { rgb: "94A3B8" } },
-                      right: { style: "thin", color: { rgb: "94A3B8" } }
-                    }
-                  };
-                } else {
-                  const firstCellRef = XLSX.utils.encode_cell({ r: R, c: range.s.c });
-                  const firstCell = ws[firstCellRef];
-                  const isTotalRow = firstCell && String(firstCell.v).toUpperCase().includes('TOTAL');
-
-                  if (isTotalRow) {
-                    cell.s = {
-                      font: { bold: true, name: "Calisto MT", sz: 10 },
-                      fill: { fgColor: { rgb: "F1F5F9" } },
-                      border: {
-                        top: { style: "thin", color: { rgb: "94A3B8" } },
-                        bottom: { style: "double", color: { rgb: "475569" } },
-                        left: { style: "thin", color: { rgb: "E2E8F0" } },
-                        right: { style: "thin", color: { rgb: "E2E8F0" } }
-                      },
-                      alignment: { vertical: "center", horizontal: "right" }
-                    };
-                  } else {
-                    cell.s = {
-                      font: { name: "Calisto MT", sz: 9 },
-                      alignment: { vertical: "center", horizontal: isNumeric ? "right" : "left" },
-                      border: {
-                        top: { style: "thin", color: { rgb: "E2E8F0" } },
-                        bottom: { style: "thin", color: { rgb: "E2E8F0" } },
-                        left: { style: "thin", color: { rgb: "E2E8F0" } },
-                        right: { style: "thin", color: { rgb: "E2E8F0" } }
-                      }
-                    };
-                  }
-                }
-              }
-            }
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })]; if (!cell) continue;
+            cell.s = { font: { name: "Segoe UI", sz: 10 }, alignment: { vertical: "center", horizontal: typeof cell.v === 'number' ? "right" : "left" }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+            if (R < headerRows) { cell.s.fill = { fgColor: { rgb: "0F172A" } }; cell.s.font = { color: { rgb: "FFFFFF" }, bold: true }; }
           }
         }
-
-        ws['!cols'] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 11), 50) }));
-        ws['!rows'] = rowHeights;
       };
 
-      // Helper function to create Excel formulas safely
-      const createSubtotalCell = (columnLetter, startRow, endRow) => {
-        return { t: 'n', f: `=SUM(${columnLetter}${startRow}:${columnLetter}${endRow})` };
-      };
-
-      // 1. Fully matched Sheet
-      const mH1 = [
-        'BOOKS', '', '', '', '', '', '', '', '',
-        'GSTR-2B', '', '', '', '', '', '', '', ''
-      ];
-      const mHeaders = [
-        'Supplier Name', 'GSTIN of Supplier', 'Invoice Number', 'Invoice Date', 'Taxable Value', 'IGST Amount', 'CGST Amount', 'SGST / UTGST Amount', 'Total GST Amount',
-        'Supplier Name', 'GSTIN of Supplier', 'Invoice Number', 'Invoice Date', 'Taxable Value', 'IGST Amount', 'CGST Amount', 'SGST / UTGST Amount', 'Total GST Amount'
-      ];
-      const mData = res.matched.map(m => [
-        m.books.supplierName || '', m.books.gstin || '', m.books.invoiceNo, m.books.invoiceDate || '', m.books.taxableValue, m.books.igst || 0, m.books.cgst || 0, m.books.sgst || 0, m.books.totalGst || 0,
-        m.gstr2b.supplierName || '', m.gstr2b.gstin || '', m.gstr2b.invoiceNo, m.gstr2b.invoiceDate || '', m.gstr2b.taxableValue, m.gstr2b.igst || 0, m.gstr2b.cgst || 0, m.gstr2b.sgst || 0, m.gstr2b.totalGst || 0
-      ]);
-      const wsMatched = XLSX.utils.aoa_to_sheet([mH1, mHeaders, ...mData]);
-      wsMatched['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
-        { s: { r: 0, c: 9 }, e: { r: 0, c: 17 } }
-      ];
-
-      // Add Totals
-      const mTotalRowIdx = N_m + 3;
-      if (N_m > 0) {
-        wsMatched['A' + mTotalRowIdx] = { t: 's', v: 'TOTAL' };
-        wsMatched[`E${mTotalRowIdx}`] = createSubtotalCell('E', 3, N_m + 2);
-        wsMatched[`F${mTotalRowIdx}`] = createSubtotalCell('F', 3, N_m + 2);
-        wsMatched[`G${mTotalRowIdx}`] = createSubtotalCell('G', 3, N_m + 2);
-        wsMatched[`H${mTotalRowIdx}`] = createSubtotalCell('H', 3, N_m + 2);
-        wsMatched[`I${mTotalRowIdx}`] = createSubtotalCell('I', 3, N_m + 2);
-
-        wsMatched[`N${mTotalRowIdx}`] = createSubtotalCell('N', 3, N_m + 2);
-        wsMatched[`O${mTotalRowIdx}`] = createSubtotalCell('O', 3, N_m + 2);
-        wsMatched[`P${mTotalRowIdx}`] = createSubtotalCell('P', 3, N_m + 2);
-        wsMatched[`Q${mTotalRowIdx}`] = createSubtotalCell('Q', 3, N_m + 2);
-        wsMatched[`R${mTotalRowIdx}`] = createSubtotalCell('R', 3, N_m + 2);
-
-        wsMatched['!ref'] = `A1:R${mTotalRowIdx}`;
-      } else {
-        wsMatched['A3'] = { t: 's', v: 'TOTAL' };
-        ['E','F','G','H','I','N','O','P','Q','R'].forEach(col => {
-          wsMatched[`${col}3`] = { t: 'n', v: 0 };
-        });
-        wsMatched['!ref'] = `A1:R3`;
-      }
-
-      applyStylesToSheet(wsMatched, 2, false);
-
-      // 2. Amount Variance Sheet
-      const adHeaders = [
-        'Supplier (Books)', 'Invoice No', 'Taxable (Books)', 'IGST (Books)', 'CGST (Books)', 'SGST (Books)', 'GST (Books)',
-        'Supplier (2B)', 'Invoice No (2B)', 'Taxable (2B)', 'IGST (2B)', 'CGST (2B)', 'SGST (2B)', 'GST (2B)',
-        'Taxable Diff', 'GST Diff'
-      ];
-      const adData = res.amountDiffers.map(m => [
-        m.books.supplierName || '', m.books.invoiceNo, m.books.taxableValue, m.books.igst || 0, m.books.cgst || 0, m.books.sgst || 0, m.books.totalGst || 0,
-        m.gstr2b.supplierName || '', m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.igst || 0, m.gstr2b.cgst || 0, m.gstr2b.sgst || 0, m.gstr2b.totalGst || 0,
-        m.taxDiff, m.gstDiff
-      ]);
-      const wsAd = XLSX.utils.aoa_to_sheet([adHeaders, ...adData]);
-
-      // Add Totals
-      const adTotalRowIdx = N_d + 2;
-      if (N_d > 0) {
-        wsAd['A' + adTotalRowIdx] = { t: 's', v: 'TOTAL' };
-        wsAd['C' + adTotalRowIdx] = createSubtotalCell('C', 2, N_d + 1);
-        wsAd['D' + adTotalRowIdx] = createSubtotalCell('D', 2, N_d + 1);
-        wsAd['E' + adTotalRowIdx] = createSubtotalCell('E', 2, N_d + 1);
-        wsAd['F' + adTotalRowIdx] = createSubtotalCell('F', 2, N_d + 1);
-        wsAd['G' + adTotalRowIdx] = createSubtotalCell('G', 2, N_d + 1);
-
-        wsAd['J' + adTotalRowIdx] = createSubtotalCell('J', 2, N_d + 1);
-        wsAd['K' + adTotalRowIdx] = createSubtotalCell('K', 2, N_d + 1);
-        wsAd['L' + adTotalRowIdx] = createSubtotalCell('L', 2, N_d + 1);
-        wsAd['M' + adTotalRowIdx] = createSubtotalCell('M', 2, N_d + 1);
-        wsAd['N' + adTotalRowIdx] = createSubtotalCell('N', 2, N_d + 1);
-
-        wsAd['O' + adTotalRowIdx] = createSubtotalCell('O', 2, N_d + 1);
-        wsAd['P' + adTotalRowIdx] = createSubtotalCell('P', 2, N_d + 1);
-
-        wsAd['!ref'] = `A1:P${adTotalRowIdx}`;
-      } else {
-        wsAd['A2'] = { t: 's', v: 'TOTAL' };
-        ['C','D','E','F','G','J','K','L','M','N','O','P'].forEach(col => {
-          wsAd[col + '2'] = { t: 'n', v: 0 };
-        });
-        wsAd['!ref'] = `A1:P2`;
-      }
-
-      applyStylesToSheet(wsAd, 1, false);
-
-      // 3. Books Only (Not in 2B)
-      const standardHeaders = ['Supplier Name', 'GSTIN', 'Invoice No', 'Invoice Date', 'Taxable Value', 'IGST', 'CGST', 'SGST', 'Total GST'];
-      const bOnlyData = res.notIn2B.map(b => [
-        b.supplierName || '', b.gstin || '', b.invoiceNo, b.invoiceDate || '',
-        b.taxableValue, b.igst || 0, b.cgst || 0, b.sgst || 0, b.totalGst || 0
-      ]);
-      const wsBOnly = XLSX.utils.aoa_to_sheet([standardHeaders, ...bOnlyData]);
-
-      // Add Totals
-      const bTotalRowIdx = N_ni2b + 2;
-      if (N_ni2b > 0) {
-        wsBOnly['A' + bTotalRowIdx] = { t: 's', v: 'TOTAL' };
-        wsBOnly['E' + bTotalRowIdx] = createSubtotalCell('E', 2, N_ni2b + 1);
-        wsBOnly['F' + bTotalRowIdx] = createSubtotalCell('F', 2, N_ni2b + 1);
-        wsBOnly['G' + bTotalRowIdx] = createSubtotalCell('G', 2, N_ni2b + 1);
-        wsBOnly['H' + bTotalRowIdx] = createSubtotalCell('H', 2, N_ni2b + 1);
-        wsBOnly['I' + bTotalRowIdx] = createSubtotalCell('I', 2, N_ni2b + 1);
-        wsBOnly['!ref'] = `A1:I${bTotalRowIdx}`;
-      } else {
-        wsBOnly['A2'] = { t: 's', v: 'TOTAL' };
-        ['E','F','G','H','I'].forEach(col => {
-          wsBOnly[col + '2'] = { t: 'n', v: 0 };
-        });
-        wsBOnly['!ref'] = `A1:I2`;
-      }
-
-      applyStylesToSheet(wsBOnly, 1, false);
-
-      // 4. GSTR-2B Only (Not in Books)
-      const gOnlyData = res.notInBooks.map(g => [
-        g.supplierName || '', g.gstin || '', g.invoiceNo, g.invoiceDate || '',
-        g.taxableValue, g.igst || 0, g.cgst || 0, g.sgst || 0, g.totalGst || 0
-      ]);
-      const wsGOnly = XLSX.utils.aoa_to_sheet([standardHeaders, ...gOnlyData]);
-
-      // Add Totals
-      const gTotalRowIdx = N_nib + 2;
-      if (N_nib > 0) {
-        wsGOnly['A' + gTotalRowIdx] = { t: 's', v: 'TOTAL' };
-        wsGOnly['E' + gTotalRowIdx] = createSubtotalCell('E', 2, N_nib + 1);
-        wsGOnly['F' + gTotalRowIdx] = createSubtotalCell('F', 2, N_nib + 1);
-        wsGOnly['G' + gTotalRowIdx] = createSubtotalCell('G', 2, N_nib + 1);
-        wsGOnly['H' + gTotalRowIdx] = createSubtotalCell('H', 2, N_nib + 1);
-        wsGOnly['I' + gTotalRowIdx] = createSubtotalCell('I', 2, N_nib + 1);
-        wsGOnly['!ref'] = `A1:I${gTotalRowIdx}`;
-      } else {
-        wsGOnly['A2'] = { t: 's', v: 'TOTAL' };
-        ['E','F','G','H','I'].forEach(col => {
-          wsGOnly[col + '2'] = { t: 'n', v: 0 };
-        });
-        wsGOnly['!ref'] = `A1:I2`;
-      }
-
-      applyStylesToSheet(wsGOnly, 1, false);
-
-      // 5. Reconciliation Summary with formulas
-      const titleBanner = ['GST Input Tax Credit (ITC) Reconciliation Working Paper', '', '', '', ''];
-      const summaryHeaders = ['Particulars', 'Taxable Value', 'IGST', 'CGST', 'SGST'];
-      const summaryRows = state.summary.map(s => [s.label, s.tv || 0, s.ig || 0, s.cg || 0, s.sg || 0]);
-
-      const wsSummary = XLSX.utils.aoa_to_sheet([titleBanner, summaryHeaders, ...summaryRows]);
-      wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
-
-      const idx_m_tot = N_m + 3;
-      const idx_d_tot = N_d + 2;
-      const idx_b_tot = N_ni2b + 2;
-      const idx_g_tot = N_nib + 2;
-
-      // Link values to Sheet totals dynamically using exact formulas with fallback static values
-      // Row 3: Input invoices as per accounts (Books) - mapped from idx 0 (state.summary[0])
-      wsSummary['B3'] = { t: 'n', v: state.summary[0].tv || 0, f: `='Matched'!E${idx_m_tot}+'Amount Variance'!C${idx_d_tot}+'Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C3'] = { t: 'n', v: state.summary[0].ig || 0, f: `='Matched'!F${idx_m_tot}+'Amount Variance'!D${idx_d_tot}+'Not in 2B(Books Only)'!F${idx_b_tot}` };
-      wsSummary['D3'] = { t: 'n', v: state.summary[0].cg || 0, f: `='Matched'!G${idx_m_tot}+'Amount Variance'!E${idx_d_tot}+'Not in 2B(Books Only)'!G${idx_b_tot}` };
-      wsSummary['E3'] = { t: 'n', v: state.summary[0].sg || 0, f: `='Matched'!H${idx_m_tot}+'Amount Variance'!F${idx_d_tot}+'Not in 2B(Books Only)'!H${idx_b_tot}` };
-
-      // Row 4 is Add: (Blank)
+      const wsSummary = XLSX.utils.aoa_to_sheet([['GST RECONCILIATION SUMMARY'], ['Particulars', 'Taxable', 'IGST', 'CGST', 'SGST'], ...state.summary.map(s => [s.label, s.tv || 0, s.ig || 0, s.cg || 0, s.sg || 0])]);
+      wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }]; applyStyles(wsSummary, 2, true);
       
-      // Row 5: • Input invoices in 2B not in accounts (Missing in Books) - mapped from idx 2 (state.summary[2])
-      wsSummary['B5'] = { t: 'n', v: state.summary[2].tv || 0, f: `='Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C5'] = { t: 'n', v: state.summary[2].ig || 0, f: `='Not in Books(2B Only)'!F${idx_g_tot}` };
-      wsSummary['D5'] = { t: 'n', v: state.summary[2].cg || 0, f: `='Not in Books(2B Only)'!G${idx_g_tot}` };
-      wsSummary['E5'] = { t: 'n', v: state.summary[2].sg || 0, f: `='Not in Books(2B Only)'!H${idx_g_tot}` };
+      const wsMatched = XLSX.utils.aoa_to_sheet([['MATCHED INVOICES'], ['Supplier (Books)', 'Inv No', 'Taxable', 'GST', 'Supplier (Portal)', 'Inv No', 'Taxable', 'GST'], ...res.matched.map(m => [m.books.supplierName, m.books.invoiceNo, m.books.taxableValue, m.books.totalGst, m.gstr2b.supplierName, m.gstr2b.invoiceNo, m.gstr2b.taxableValue, m.gstr2b.totalGst])]);
+      applyStyles(wsMatched, 2);
 
-      // Row 6: • Reverse Charge (Inward RCM) - mapped from idx 3 (state.summary[3])
-      wsSummary['B6'] = { t: 'n', v: 0 };
-      wsSummary['C6'] = { t: 'n', v: 0 };
-      wsSummary['D6'] = { t: 'n', v: 0 };
-      wsSummary['E6'] = { t: 'n', v: 0 };
-
-      // Row 7: • Expenses / Other capital credits - mapped from idx 4 (state.summary[4])
-      wsSummary['B7'] = { t: 'n', v: 0 };
-      wsSummary['C7'] = { t: 'n', v: 0 };
-      wsSummary['D7'] = { t: 'n', v: 0 };
-      wsSummary['E7'] = { t: 'n', v: 0 };
-
-      // Row 8: • Amount Difference in Accounts (GSTR-2B higher) - mapped from idx 5 (state.summary[5])
-      wsSummary['B8'] = { t: 'n', v: state.summary[5].tv || 0, f: `='Amount Variance'!J${idx_d_tot}-'Amount Variance'!C${idx_d_tot}` };
-      wsSummary['C8'] = { t: 'n', v: state.summary[5].ig || 0, f: `='Amount Variance'!K${idx_d_tot}-'Amount Variance'!D${idx_d_tot}` };
-      wsSummary['D8'] = { t: 'n', v: state.summary[5].cg || 0, f: `='Amount Variance'!L${idx_d_tot}-'Amount Variance'!E${idx_d_tot}` };
-      wsSummary['E8'] = { t: 'n', v: state.summary[5].sg || 0, f: `='Amount Variance'!M${idx_d_tot}-'Amount Variance'!F${idx_d_tot}` };
-
-      // Row 9 is Less: (Blank)
-
-      // Row 10: • Input invoices in accounts not in 2B (Missing in 2B) - mapped from idx 7 (state.summary[7])
-      wsSummary['B10'] = { t: 'n', v: state.summary[7].tv || 0, f: `='Not in 2B(Books Only)'!E${idx_b_tot}` };
-      wsSummary['C10'] = { t: 'n', v: state.summary[7].ig || 0, f: `='Not in 2B(Books Only)'!F${idx_b_tot}` };
-      wsSummary['D10'] = { t: 'n', v: state.summary[7].cg || 0, f: `='Not in 2B(Books Only)'!G${idx_b_tot}` };
-      wsSummary['E10'] = { t: 'n', v: state.summary[7].sg || 0, f: `='Not in 2B(Books Only)'!H${idx_b_tot}` };
-
-      // Row 11: • Input invoice amended / credits reversed - mapped from idx 8 (state.summary[8])
-      wsSummary['B11'] = { t: 'n', v: 0 };
-      wsSummary['C11'] = { t: 'n', v: 0 };
-      wsSummary['D11'] = { t: 'n', v: 0 };
-      wsSummary['E11'] = { t: 'n', v: 0 };
-
-      // Row 12: Input invoices as per calculation (Reconciled) - mapped from idx 9 (state.summary[9])
-      wsSummary['B12'] = { t: 'n', v: state.summary[9].tv || 0, f: `=B3+B5+B6+B7+B8-B10-B11` };
-      wsSummary['C12'] = { t: 'n', v: state.summary[9].ig || 0, f: `=C3+C5+C6+C7+C8-C10-C11` };
-      wsSummary['D12'] = { t: 'n', v: state.summary[9].cg || 0, f: `=D3+D5+D6+D7+D8-D10-D11` };
-      wsSummary['E12'] = { t: 'n', v: state.summary[9].sg || 0, f: `=E3+E5+E6+E7+E8-E10-E11` };
-
-      // Row 13: Input invoices as per 2B (GSTR-2B Actual Total) - mapped from idx 10 (state.summary[10])
-      wsSummary['B13'] = { t: 'n', v: state.summary[10].tv || 0, f: `='Matched'!N${idx_m_tot}+'Amount Variance'!J${idx_d_tot}+'Not in Books(2B Only)'!E${idx_g_tot}` };
-      wsSummary['C13'] = { t: 'n', v: state.summary[10].ig || 0, f: `='Matched'!O${idx_m_tot}+'Amount Variance'!K${idx_d_tot}+'Not in Books(2B Only)'!F${idx_g_tot}` };
-      wsSummary['D13'] = { t: 'n', v: state.summary[10].cg || 0, f: `='Matched'!P${idx_m_tot}+'Amount Variance'!L${idx_d_tot}+'Not in Books(2B Only)'!G${idx_g_tot}` };
-      wsSummary['E13'] = { t: 'n', v: state.summary[10].sg || 0, f: `='Matched'!Q${idx_m_tot}+'Amount Variance'!M${idx_d_tot}+'Not in Books(2B Only)'!H${idx_g_tot}` };
-
-      // Row 14: Difference (Calculated vs GSTR-2B) - mapped from idx 11 (state.summary[11])
-      wsSummary['B14'] = { t: 'n', v: state.summary[11].tv || 0, f: `=B12-B13` };
-      wsSummary['C14'] = { t: 'n', v: state.summary[11].ig || 0, f: `=C12-C13` };
-      wsSummary['D14'] = { t: 'n', v: state.summary[11].cg || 0, f: `=D12-D13` };
-      wsSummary['E14'] = { t: 'n', v: state.summary[11].sg || 0, f: `=E12-E13` };
-
-      // Anchor Hyperlinks inside summary to quickly jump between tabs
-      const attachLink = (cell, sheetName) => {
-        if (wsSummary[cell]) {
-          wsSummary[cell].l = {
-            Target: `#'${sheetName}'!A1`,
-            Tooltip: `Jump to sheet ${sheetName}`
-          };
-        }
-      };
-
-      attachLink('A3', 'Matched');
-      attachLink('A5', 'Not in Books(2B Only)');
-      attachLink('A8', 'Amount Variance');
-      attachLink('A10', 'Not in 2B(Books Only)');
-      attachLink('A13', 'Matched');
-
-      applyStylesToSheet(wsSummary, 2, true);
-      XLSX.utils.book_append_sheet(wb, wsSummary, 'Reconciliation Summary');
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
       XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
-      XLSX.utils.book_append_sheet(wb, wsAd, 'Amount Variance');
-      XLSX.utils.book_append_sheet(wb, wsBOnly, 'Not in 2B(Books Only)');
-      XLSX.utils.book_append_sheet(wb, wsGOnly, 'Not in Books(2B Only)');
-
-      const finalName = customName || `GST_Reconciled_Report_AJ_v1.2.xlsx`;
-      const fn = finalName.endsWith('.xlsx') ? finalName : `${finalName}.xlsx`;
+      
+      const fn = customName || `GST_Recon_v1.6.1.xlsx`;
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-      await dispatchExport(blob, fn, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', usePicker);
-    }
-
-    function restartWorkspace() {
-      state.books = { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null };
-      state.gstr2b = { rawHeaders: [], rawRows: [], mapping: {}, processed: [], rawGrid: null };
-      state.results = null;
-      state.summary = [];
-
-      document.getElementById('books-start-row').value = "1";
-      document.getElementById('gstr2b-start-row').value = "1";
-
-      resetTrackerUI('books');
-      resetTrackerUI('gstr2b');
-      document.getElementById('runtime-controls').classList.add('hidden');
-    }
-
-    // Standalone Save As Dialog Engine
-    let currentStandaloneFilename = 'GST_Reconciliation_Report.xlsx';
-
-    function triggerStandaloneSaveAs(defaultFn) {
-      if (!state.results) {
-         alert("Please run reconciliation first!");
-         return;
-      }
-      currentStandaloneFilename = defaultFn || 'GST_Reconciliation_Report.xlsx';
       
-      const fnInput = document.getElementById('standalone-filename-input');
-      if (fnInput) {
-        fnInput.value = currentStandaloneFilename;
-      }
-      
-      document.getElementById('standalone-saveas-modal').classList.remove('hidden');
-    }
-
-    function closeStandaloneSaveAs() {
-      document.getElementById('standalone-saveas-modal').classList.add('hidden');
-    }
-
-    async function handleStandaloneDirectDownload() {
-      // Get current filename input value if exists
-      const fnInput = document.getElementById('standalone-filename-input');
-      const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
-      
-      try {
-        await exportReconciliationReport(filename, false);
-        showStandaloneToast(filename, 'Browser Downloads Folder');
-      } catch (err) {
-        console.error(err);
-      }
-      closeStandaloneSaveAs();
-    }
-
-    async function handleStandaloneNativeSaveAs() {
-      const fnInput = document.getElementById('standalone-filename-input');
-      const filename = fnInput ? (fnInput.value.trim() || currentStandaloneFilename) : currentStandaloneFilename;
-
-      const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-
-      if (!isIframe && typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+      if (useFileSystem && 'showSaveFilePicker' in window) {
         try {
-          await exportReconciliationReport(filename, true);
-          showStandaloneToast(filename, 'Native File System Access');
-          closeStandaloneSaveAs();
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-          console.warn('Native picker failed/blocked in this context. Falling back to direct layout download.', err);
-        }
+          const handle = await window.showSaveFilePicker({ suggestedName: fn, types: [{ description: 'Excel', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }] });
+          const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
+        } catch (err) {}
       }
-
-      // Fallback: Direct download using standard path
-      try {
-        await exportReconciliationReport(filename, false);
-        showStandaloneToast(filename, 'Browser Downloads Folder');
-      } catch (err) {
-        console.error(err);
-      }
-      closeStandaloneSaveAs();
+      const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = fn; a.click();
     }
 
-    function showStandaloneToast(fn, pathStr) {
-      const toast = document.getElementById('standalone-toast-banner');
-      if (!toast) return;
-      document.getElementById('standalone-toast-body').textContent = 
-        pathStr === 'Native File System Access' 
-          ? `File compiled successfully. Save location chosen via native system popup.` 
-          : `File compiled successfully and downloaded as "${fn}" via browser downloads.`;
-      toast.classList.remove('hidden');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 8500);
+    function triggerStandaloneSaveAs(defaultFn) { document.getElementById('standalone-filename-input').value = defaultFn; document.getElementById('standalone-saveas-modal').classList.remove('hidden'); }
+    function closeStandaloneSaveAs() { document.getElementById('standalone-saveas-modal').classList.add('hidden'); }
+    async function handleStandaloneDirectDownload() { const fn = document.getElementById('standalone-filename-input').value || 'GST_Report.xlsx'; await exportReconciliationReport(fn, false); closeStandaloneSaveAs(); }
+    async function handleStandaloneNativeSaveAs() { const fn = document.getElementById('standalone-filename-input').value || 'GST_Report.xlsx'; await exportReconciliationReport(fn, true); closeStandaloneSaveAs(); }
+    function restartWorkspace() { location.reload(); }
+    function toggleTheme() { document.body.classList.toggle('dark'); updateThemeUI(document.body.classList.contains('dark')); }
+    function updateThemeUI(isDark) {
+      const knob = document.getElementById('theme-knob'), label = document.getElementById('theme-label'), container = document.getElementById('knob-icon-parent');
+      knob.classList.toggle('translate-x-[24px]', isDark); label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+      container.innerHTML = isDark ? `<svg class="w-3 h-3 text-slate-800" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>` : `<svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>`;
     }
-
-    function applyTheme(isDark) {
-      const knob = document.getElementById('theme-knob');
-      const label = document.getElementById('theme-label');
-      const container = document.getElementById('knob-icon-parent');
-      
-      if (!knob || !label || !container) return;
-      
-      if (isDark) {
-        document.body.classList.add('dark');
-        knob.classList.add('translate-x-[24px]');
-        knob.classList.remove('translate-x-0');
-        label.textContent = 'Dark Mode';
-        container.innerHTML = `
-          <svg class="w-3 h-3 text-slate-800" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
-        `;
-      } else {
-        document.body.classList.remove('dark');
-        knob.classList.remove('translate-x-[24px]');
-        knob.classList.add('translate-x-0');
-        label.textContent = 'Light Mode';
-        container.innerHTML = `
-          <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/>
-          </svg>
-        `;
-      }
-    }
-
-    function toggleTheme() {
-      const isDarkNow = document.body.classList.contains('dark');
-      const nextDark = !isDarkNow;
-      localStorage.setItem('aj-recon-darkmode', nextDark ? '1' : '0');
-      applyTheme(nextDark);
-    }
-
-    // On Load themes
-    document.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('aj-recon-darkmode');
-      applyTheme(saved === '1');
-    });
   </script>
 
-  <!-- SPLIT SAVE AS DIALOG MODAL -->
-  <div id="standalone-saveas-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none">
-    
-    <!-- CHOICE EXPORT CONFIGURATION SCREEN -->
-    <div id="standalone-select-view" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden text-slate-800 dark:text-slate-100 transition-colors duration-300">
-      <!-- Header -->
-      <div class="flex justify-between items-center p-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          📥 Export &amp; Save Workbook
-        </h3>
-        <button onclick="closeStandaloneSaveAs()" class="text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 cursor-pointer p-1">✕</button>
-      </div>
-
-      <!-- Form Body -->
-      <div class="p-6 space-y-5">
-        <div>
-          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-            Workbook Filename
-          </label>
-          <div class="flex gap-2">
-            <input 
-              id="standalone-filename-input"
-              type="text" 
-              class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
-              value=""
-              placeholder="GST_Reconciliation_Report.xlsx"
-            />
-            <span class="bg-slate-100 dark:bg-slate-800 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center">
-              .xlsx
-            </span>
-          </div>
-        </div>
-
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Choose how you would like to save your formula-linked reconciliation ledger:
-        </p>
-
-        <!-- General Disclaimer Alert -->
-        <div class="text-[11px] text-amber-550 dark:text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 leading-normal flex items-start gap-2 text-left">
-          <span class="text-xs mt-0.5">⚠️</span>
-          <span><strong>Note:</strong> Best works in Google Chrome. In iframe/embedded views, single-clicking will instantly and safely download to your default downloads folder.</span>
-        </div>
-
-        <div class="space-y-4">
-          <!-- Option 1: Direct browser download -->
-          <button onclick="handleStandaloneDirectDownload()" class="w-full text-left bg-slate-50 hover:bg-slate-150 dark:bg-slate-800/40 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex items-start gap-4 transition group cursor-pointer">
-            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400 shrink-0 text-lg">📥</div>
-            <div class="min-w-0 flex-1">
-              <h4 class="text-sm font-bold text-slate-950 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
-                Standard Web Download
-              </h4>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
-                Direct quick download. Saves standard Excel workbook to your browser default Downloads folder immediately.
-              </p>
-            </div>
-          </button>
-          
-          <!-- Option 2: Native file handle / Save As selector -->
-          <button onclick="handleStandaloneNativeSaveAs()" class="w-full text-left bg-slate-50 hover:bg-slate-150 dark:bg-slate-800/40 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex items-start gap-4 transition group cursor-pointer">
-            <div class="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400 shrink-0 text-lg">🔄</div>
-            <div class="min-w-0 flex-1">
-              <h4 class="text-sm font-bold text-slate-950 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                Native "Save As" Popup Screen
-              </h4>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
-                Pulls your actual computer's system paths. Triggers a real native system Save Dialog so you can browse real local directories like Desktop, OneDrive, or document archives.
-              </p>
-            </div>
-          </button>
-        </div>
-
-        <!-- Setting explanation -->
-        <div class="bg-slate-50 dark:bg-slate-800/30 border border-slate-150 dark:border-slate-800/60 rounded-xl p-4 flex gap-3.5 items-start">
-          <div class="text-[14px]">⚙️</div>
-          <div class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 select-text">
-            <strong class="font-bold text-slate-800 dark:text-slate-200 block mb-0.5">
-              For Ultimate Native Control (Highly Recommended)
-            </strong>
-            To have Chrome pop up the save location box for all downloads:
-            <ol class="list-decimal pl-4 mt-2 space-y-1 font-medium">
-              <li>Open Google Chrome <strong class="font-bold">Settings</strong> (chrome://settings).</li>
-              <li>Go to the <strong className="font-bold">Downloads</strong> menu in the left panel.</li>
-              <li>Tick on <strong class="font-bold">"Ask where to save each file before downloading"</strong>.</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="flex justify-end gap-3 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
-        <button onclick="closeStandaloneSaveAs()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Cancel</button>
+  <div id="standalone-saveas-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b dark:border-slate-800"><h3 class="text-base font-bold dark:text-white">📥 Export Workbook</h3><button onclick="closeStandaloneSaveAs()" class="text-slate-400 hover:text-slate-600">✕</button></div>
+      <div class="p-6 space-y-4">
+        <input id="standalone-filename-input" type="text" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm dark:text-white">
+        <button onclick="handleStandaloneDirectDownload()" class="w-full text-left p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-4"><span>📥</span><div><h4 class="text-sm font-bold dark:text-white">Standard Download</h4><p class="text-[10px] text-slate-500">Fastest method.</p></div></button>
+        <button onclick="handleStandaloneNativeSaveAs()" class="w-full text-left p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-4"><span>📁</span><div><h4 class="text-sm font-bold dark:text-white">Native "Save As"</h4><p class="text-[10px] text-slate-500">Choose folder.</p></div></button>
       </div>
     </div>
-  </div>
-
-  <!-- FLOATING WORKBOOK TOAST BANNER -->
-  <div id="standalone-toast-banner" class="hidden fixed top-5 right-5 z-[200] max-w-md bg-white border-l-4 border-emerald-500 rounded-lg shadow-xl p-4 flex gap-3.5 items-start justify-between border border-slate-200 text-[#1e293b] text-xs">
-    <div class="flex gap-2 text-emerald-600">
-      <span class="text-sm shrink-0 mt-0.5">✔️</span>
-      <div>
-        <h4 id="standalone-toast-title" class="font-bold text-slate-900">Workbook Saved</h4>
-        <p id="standalone-toast-body" class="text-slate-650 mt-1 font-medium leading-relaxed"></p>
-        <div class="text-[10px] text-slate-400 mt-2 italic font-semibold">Note: Standard browser security downloads the file. Check your downloads directory to place in manual destination.</div>
-      </div>
-    </div>
-    <button onclick="document.getElementById('standalone-toast-banner').classList.add('hidden')" class="text-slate-400 hover:text-[#e81123] p-0.5 shrink-0">✕</button>
   </div>
 </body>
 </html>
